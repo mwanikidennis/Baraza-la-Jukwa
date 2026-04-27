@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    container_name: jukwa-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-jukwaa}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-jukwaa_secret}
+      POSTGRES_DB: ${DB_NAME:-jukwaa}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: jukwa-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/data:/data
+    restart: always
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: jukwa-mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    restart: always
+
+  nginx:
+    image: openresty/openresty:1.25.3.1-alpine
+    container_name: jukwa-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    restart: always
+    depends_on:
+      - incident-service
+
+  minio:
+    image: minio/minio:RELEASE.2023-11-20T22-40-07Z
+    container_name: jukwa-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-admin123}
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    volumes:
+      - ./minio/data:/data
+    command: server /data --console-address ":9090"
+    restart: always
+
+  incident-service:
+    build:
+      context: ../services/incident
+    container_name: jukwa-incident-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+    depends_on:
+      - postgres
+      - redis
+    restart: always

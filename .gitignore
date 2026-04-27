@@ -1,0 +1,64 @@
+# IDE and System Files
+.cursor/
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Node Modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Android Build
+android/build/
+android/app/build/
+*.apk
+*.aab
+local.properties
+.gradle/
+
+# NextJS/PWA Build
+pwa/.next/
+pwa/out/
+pwa/build/
+
+# Backend Build
+services/**/dist/
+services/**/build/
+
+# Python / General
+__pycache__/
+*.pyc
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+
+# Dependencies
+# Keep package-lock.json and yarn.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# MinIO / Object Storage
+infra/minio/data/
+
+# Postgres Data
+infra/postgres/data/
+
+# Redis Data
+infra/redis/data/
+
+# Mosquitto Data
+infra/mosquitto/data/
+infra/mosquitto/log/

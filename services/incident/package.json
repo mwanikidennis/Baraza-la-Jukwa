@@ -1,0 +1,20 @@
+{
+  "name": "incident-service",
+  "version": "0.1.0",
+  "description": "Fastify backend for incident management",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev src/index.ts",
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "fastify-plugin": "^4.5.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "ts-node-dev": "^2.0.0"
+  }
+}

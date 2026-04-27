@@ -1,0 +1,13 @@
+# JUKWA Core Development Rules
+
+1. **Complete Code:** Generate COMPLETE, RUNNABLE code. No placeholders, no "implement this later," no TODO comments unless specifically asked for a skeleton.
+2. **Kotlin Standards:** Every Kotlin file includes proper package declarations, all imports, and follows the project package structure (ke.jukwa.*).
+3. **TypeScript Standards:** Every TypeScript file includes proper type definitions — no `any` types unless interfacing with an untyped external library.
+4. **Complete Features:** When asked to create a feature, generate ALL the files needed: Room entities + DAOs, Repository interface + implementation, Use case, ViewModel, Compose UI, Fastify routes + service + model, database migration, and tests.
+5. **Offline-first:** All database operations are offline-first: write to Room, then sync via WorkManager.
+6. **Privacy First:** All media handling strips EXIF metadata before any network operation.
+7. **Anonymity Modes:** Always respect the three anonymity modes — never store PII in Standard Mode, never store anything identifiable in Incognito Mode.
+8. **UI/UX:** All Compose UI uses Material 3 components, follows the color system (Earth tones: deep green primary, amber accent, red emergency), and works on API 23+. Target median device specs (detect via ActivityManager.isLowRamDevice()). Map-first approach.
+9. **File Paths:** Provide clear file paths for every generated file.
+10. **Docker:** When creating Docker services, include the Dockerfile, the health check endpoint, and the docker-compose.yml additions.
+11. **Documentation:** Keep README.md, docs/SETUP.md, docs/API.md, docs/ARCHITECTURE.md, docs/BARAZA.md updated. Each service gets its own README.md.

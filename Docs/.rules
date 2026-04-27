@@ -1,0 +1,42 @@
+# Documentation Rules (docs/.rules)
+
+## 1. Naming Conventions
+- **Folders**: Use PascalCase for top‑level concepts (e.g., `Start Build`, `Daily Sessions`). Sub‑folders use Title Case with spaces.
+- **Files**: Include date and time where appropriate: `YYYY-MM-DD_HH-MM_Description.md`.
+- **Markdown Headers**: Follow `#`, `##`, `###` hierarchy; keep a single H1 per file.
+
+## 2. Folder Structure
+```
+docs/
+├─ Start Build/
+│  └─ JUKWA Build Kickstart and Master Prompt.md
+├─ Daily Sessions/
+│  └─ 2026-04-27_13-35_Session_Kickstart.md
+├─ Build Structure Architectural/
+├─ Build Front End/
+├─ Build Backend/
+├─ Build Stages/
+├─ Build Generals/
+├─ Build Tests/
+├─ Build Status/
+├─ Build Completion/
+├─ Build Future/
+└─ Failures and How to/
+```
+
+## 3. Dating & Versioning
+- Use **UTC** timestamps in filenames.
+- Prefix each document with a version tag when major changes occur, e.g., `v1.0_2026-04-27_Architecture.md`.
+
+## 4. Content Guidelines
+- **Header Block**: Title, short description, date, author.
+- **References**: Use relative links within `docs/`.
+- **Code Samples**: Wrap in triple backticks with language identifier.
+- **Images**: Store under `docs/assets/` and reference with relative paths.
+
+## 5. Review Process
+- Every new document must be added to `Sessional_Documentary.md` via a pull‑request.
+- Use the checklist in `docs/Daily Sessions/` to verify naming, dating, and linking.
+
+---
+*Generated from the Master Prompt guidelines.*
