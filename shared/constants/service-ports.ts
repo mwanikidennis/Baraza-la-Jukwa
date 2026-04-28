@@ -1,0 +1,20 @@
+/**
+ * JUKWA Service Port Map
+ * Source: Master Prompt §3
+ */
+
+export const SERVICE_PORTS = {
+  INCIDENT: 3001,
+  COMMITMENT: 3002,
+  TRAFFIC: 3003,
+  EMERGENCY: 3004,
+  CIVIC: 3005,
+  IDENTITY: 3006,
+  NOTIFICATION: 3007,
+  PAYMENT: 3008,
+  ACCOUNTABILITY: 3009,
+  AI_CLASSIFIER: 3010,
+  MEDIA: 3011,
+  USSD: 3012,
+  WHATSAPP: 3013
+} as const;

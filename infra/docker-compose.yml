@@ -11,9 +11,17 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./postgres/data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: always
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-jukwaa} -d ${DB_NAME:-jukwaa}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - jukwa_net
 
   redis:
     image: redis:7-alpine
@@ -21,8 +29,15 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./redis/data:/data
-    restart: always
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - jukwa_net
 
   mosquitto:
     image: eclipse-mosquitto:2
@@ -31,36 +46,38 @@ services:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - ./mosquitto/data:/mosquitto/data
-      - ./mosquitto/log:/mosquitto/log
-    restart: always
-
-  nginx:
-    image: openresty/openresty:1.25.3.1-alpine
-    container_name: jukwa-nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-    restart: always
-    depends_on:
-      - incident-service
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -h localhost -t '$$SYS/#' -C 1 -W 3 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - jukwa_net
 
   minio:
     image: minio/minio:RELEASE.2023-11-20T22-40-07Z
     container_name: jukwa-minio
     environment:
       MINIO_ROOT_USER: ${MINIO_USER:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-admin123}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-admin12345}
     ports:
       - "9000:9000"
       - "9090:9090"
     volumes:
-      - ./minio/data:/data
+      - minio_data:/data
     command: server /data --console-address ":9090"
-    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - jukwa_net
 
   incident-service:
     build:
@@ -69,10 +86,205 @@ services:
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT=3001
-      - DB_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - REDIS_URL=redis://redis:6379
+      - MQTT_URL=mqtt://mosquitto:1883
+      - JWT_SECRET=${JWT_SECRET:-dev-only-do-not-use-in-prod}
     depends_on:
-      - postgres
-      - redis
-    restart: always
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  commitment-service:
+    build:
+      context: ../services/commitment
+    container_name: jukwa-commitment-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3002
+      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  emergency-service:
+    build:
+      context: ../services/emergency
+    container_name: jukwa-emergency-service
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3004
+      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - MQTT_URL=mqtt://mosquitto:1883
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  notification-service:
+    build:
+      context: ../services/notification
+    container_name: jukwa-notification-service
+    ports:
+      - "3007:3007"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3007
+      - FCM_SERVER_KEY=${FCM_SERVER_KEY}
+      - MQTT_URL=mqtt://mosquitto:1883
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  identity-service:
+    build:
+      context: ../services/identity
+    container_name: jukwa-identity-service
+    ports:
+      - "3006:3006"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3006
+      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - JWT_SECRET=${JWT_SECRET:-dev-only-do-not-use-in-prod}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  traffic-service:
+    build:
+      context: ../services/traffic
+    container_name: jukwa-traffic-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3003
+      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - MONGODB_URI=mongodb://mongodb:27017/jukwaa_telemetry
+      - MQTT_URL=mqtt://mosquitto:1883
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  mongodb:
+    image: mongo:7
+    container_name: jukwa-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongodb/init-timeseries.js:/docker-entrypoint-initdb.d/init-timeseries.js:ro
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  ai-agent-service:
+    build:
+      context: ../services/ai-agent
+    container_name: jukwa-ai-agent-service
+    ports:
+      - "3010:3010"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3010
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  citizen-vault-service:
+    build:
+      context: ../services/citizen-vault
+    container_name: jukwa-citizen-vault
+    ports:
+      - "3011:3011"
+    environment:
+      - VAULT_KEY=${VAULT_KEY:-fallback_secure_key_12345678901234567890123456789012}
+    depends_on:
+      tor:
+        condition: service_started
+    volumes:
+      - ./citizen-vault-backups:/app/backups
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  tor:
+    image: goldy/tor-hidden-service:latest
+    container_name: jukwa-tor-proxy
+    ports:
+      - "9050:9050"
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  nginx:
+    image: openresty/openresty:1.25.3.1-alpine
+    container_name: jukwa-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      incident-service:
+        condition: service_healthy
+      commitment-service:
+        condition: service_started
+      emergency-service:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+networks:
+  jukwa_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  mosquitto_data:
+  mosquitto_log:
+  minio_data:
+  mongodb_data:

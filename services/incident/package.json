@@ -7,14 +7,20 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node-dev src/index.ts",
-    "test": "echo \"No tests yet\""
+    "test": "echo \"No tests yet\" && exit 0",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fastify/swagger": "^8.14.0",
+    "dotenv": "^17.4.2",
     "fastify": "^4.26.0",
-    "fastify-plugin": "^4.5.0"
+    "fastify-plugin": "^4.5.1",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "ts-node-dev": "^2.0.0"
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.20.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
   }
 }

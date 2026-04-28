@@ -1,0 +1,25 @@
+{
+  "name": "ai-agent-service",
+  "version": "0.1.0",
+  "description": "Gemini-powered AI orchestrator for incident triage and emergency dispatch",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "test": "echo \"No tests yet\" && exit 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/swagger": "^8.14.0",
+    "@google/generative-ai": "^0.1.0",
+    "dotenv": "^17.4.2",
+    "fastify": "^4.26.0",
+    "fastify-plugin": "^4.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  }
+}

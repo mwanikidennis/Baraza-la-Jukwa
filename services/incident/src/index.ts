@@ -1,32 +1,46 @@
 import Fastify from 'fastify';
 import { fastifySwagger } from '@fastify/swagger';
+import dbPlugin from './plugins/db';
+import incidentRoutes from './routes/incidents';
 
-const server = Fastify({ logger: true });
+const server = Fastify({ 
+  logger: {
+    transport: {
+      target: 'pino-pretty'
+    }
+  }
+});
 
-// Register Swagger plugin
+// Register Plugins
+server.register(dbPlugin);
+
+// Register Swagger
 server.register(fastifySwagger, {
-  routePrefix: '/documentation',
-  exposeRoute: true,
   swagger: {
     info: {
-      title: 'Incident Service API',
-      description: 'Fastify API for incident handling',
+      title: 'Jukwa Incident Service API',
+      description: 'Core incident management and spatial querying',
       version: '1.0.0',
     },
-    host: 'localhost',
+    host: 'localhost:3001',
     schemes: ['http'],
+    consumes: ['application/json'],
+    produces: ['application/json'],
   },
 });
 
+// Register Routes
+server.register(incidentRoutes);
+
 // Health check
-server.get('/health', async (request, reply) => {
-  return { status: 'ok' };
+server.get('/health', async () => {
+  return { status: 'UP', service: 'incident-service' };
 });
 
 const start = async () => {
   try {
-    await server.listen({ port: 3000, host: '0.0.0.0' });
-    server.log.info(`Server listening on ${server.server.address()?.toString()}`);
+    const port = Number(process.env.PORT) || 3001;
+    await server.listen({ port, host: '0.0.0.0' });
   } catch (err) {
     server.log.error(err);
     process.exit(1);
