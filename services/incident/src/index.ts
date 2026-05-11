@@ -1,9 +1,10 @@
 import Fastify from 'fastify';
 import { fastifySwagger } from '@fastify/swagger';
 import dbPlugin from './plugins/db';
+import mqttPlugin from './plugins/mqtt';
 import incidentRoutes from './routes/incidents';
 
-const server = Fastify({ 
+const server = Fastify({
   logger: {
     transport: {
       target: 'pino-pretty'
@@ -11,10 +12,9 @@ const server = Fastify({
   }
 });
 
-// Register Plugins
 server.register(dbPlugin);
+server.register(mqttPlugin);
 
-// Register Swagger
 server.register(fastifySwagger, {
   swagger: {
     info: {
@@ -29,10 +29,8 @@ server.register(fastifySwagger, {
   },
 });
 
-// Register Routes
 server.register(incidentRoutes);
 
-// Health check
 server.get('/health', async () => {
   return { status: 'UP', service: 'incident-service' };
 });

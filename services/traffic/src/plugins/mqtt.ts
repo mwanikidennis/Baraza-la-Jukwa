@@ -12,7 +12,7 @@ export default fp(async (fastify) => {
     fastify.log.info('Connected to Mosquitto MQTT Broker');
     // Subscribe to traffic sensors
     client.subscribe('jukwa/traffic/sensors/#', (err) => {
-      if (err) fastify.log.error('Failed to subscribe to traffic sensors', err);
+      if (err) fastify.log.error({ err }, 'Failed to subscribe to traffic sensors');
     });
   });
 
@@ -29,7 +29,7 @@ export default fp(async (fastify) => {
           raw: payload
         });
       } catch (err) {
-        fastify.log.error('Failed to store telemetry', err);
+        fastify.log.error({ err }, 'Failed to store telemetry');
       }
     }
   });

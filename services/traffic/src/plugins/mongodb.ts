@@ -16,7 +16,7 @@ export default fp(async (fastify) => {
     const db = client.db(dbName);
     fastify.decorate('mongo', db);
   } catch (err) {
-    fastify.log.error('Failed to connect to MongoDB', err);
+    fastify.log.error({ err }, 'Failed to connect to MongoDB');
   }
 
   fastify.addHook('onClose', async () => {

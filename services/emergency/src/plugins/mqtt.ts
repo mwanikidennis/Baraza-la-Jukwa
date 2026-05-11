@@ -9,29 +9,11 @@ export default fp(async (fastify) => {
   const client = mqtt.connect(url);
 
   client.on('connect', () => {
-    fastify.log.info('Connected to Mosquitto MQTT Broker');
-    // Subscribe to traffic sensors
-    client.subscribe('jukwa/traffic/sensors/#', (err) => {
-      if (err) fastify.log.error('Failed to subscribe to traffic sensors', err);
-    });
+    fastify.log.info('Emergency Service connected to MQTT broker');
   });
 
-  client.on('message', async (topic, message) => {
-    if (topic.startsWith('jukwa/traffic/sensors/')) {
-      const payload = JSON.parse(message.toString());
-      // Logic to store in MongoDB
-      try {
-        await fastify.mongo.collection('traffic_telemetry').insertOne({
-          sensor_id: topic.split('/').pop(),
-          timestamp: new Date(),
-          location: payload.location, // GeoJSON Point
-          metrics: payload.metrics,
-          raw: payload
-        });
-      } catch (err) {
-        fastify.log.error('Failed to store telemetry', err);
-      }
-    }
+  client.on('error', (err) => {
+    fastify.log.error({ err }, 'MQTT connection error');
   });
 
   fastify.decorate('mqtt', client);

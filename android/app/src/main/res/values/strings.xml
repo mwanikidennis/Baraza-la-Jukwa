@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Jukwa</string>
+    <string name="nav_home">Map</string>
+    <string name="nav_report">Report</string>
+    <string name="nav_my_reports">My Reports</string>
+    <string name="nav_baraza">Baraza</string>
+    <string name="nav_settings">Settings</string>
+</resources>

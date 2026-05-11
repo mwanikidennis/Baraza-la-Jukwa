@@ -14,7 +14,7 @@ export default fp(async (fastify) => {
     fastify.log.info('Commitment Service connected to PostgreSQL');
     client.release();
   } catch (err) {
-    fastify.log.error('Failed to connect to database', err);
+    fastify.log.error({ err }, 'Failed to connect to database');
   }
 
   fastify.decorate('db', pool);

@@ -2,16 +2,8 @@ package ke.jukwa.core.util
 
 import android.app.ActivityManager
 import android.content.Context
-
-/**
- * JUKWA Device Tier Detection
- * Source: Architecture §3.1
- * 
- * Tiers:
- * - LOW (<= 2GB RAM or LowRamDevice)
- * - STANDARD (3-4GB RAM)
- * - HIGH (4GB+ RAM)
- */
+import javax.inject.Inject
+import javax.inject.Singleton
 
 enum class DeviceTier {
     LOW,
@@ -19,21 +11,25 @@ enum class DeviceTier {
     HIGH
 }
 
-class DeviceTierManager(private val context: Context) {
-    
-    fun getDeviceTier(): DeviceTier {
+@Singleton
+class DeviceTierManager @Inject constructor(
+    private val context: Context
+) {
+    private val tier: DeviceTier by lazy { detectTier() }
+
+    fun getTier(): DeviceTier = tier
+
+    private fun detectTier(): DeviceTier {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        
-        // 1. Check for Low RAM device flag (Android Go / < 2GB)
+
         if (activityManager.isLowRamDevice) {
             return DeviceTier.LOW
         }
-        
-        // 2. Check total memory in GB
+
         val memoryInfo = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(memoryInfo)
-        val totalRamGb = memoryInfo.totalMem / (1024 * 1024 * 1024.0)
-        
+        val totalRamGb = memoryInfo.totalMem / (1024.0 * 1024.0 * 1024.0)
+
         return when {
             totalRamGb <= 2.0 -> DeviceTier.LOW
             totalRamGb <= 4.0 -> DeviceTier.STANDARD
