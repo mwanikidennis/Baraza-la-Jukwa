@@ -1,11 +1,13 @@
 import Fastify from 'fastify';
 import { fastifySwagger } from '@fastify/swagger';
 import dbPlugin from './plugins/db';
+import mqttPlugin from './plugins/mqtt';
 import commitmentRoutes from './routes/commitments';
 
 const server = Fastify({ logger: true });
 
 server.register(dbPlugin);
+server.register(mqttPlugin);
 
 server.register(fastifySwagger, {
   swagger: {

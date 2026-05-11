@@ -67,6 +67,13 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.service }}
+          path: services/${{ matrix.service }}/coverage/
+          retention-days: 7
 
   build-images:
     name: Build & push images (${{ matrix.service }})

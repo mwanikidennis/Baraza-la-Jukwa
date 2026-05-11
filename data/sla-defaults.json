@@ -1,0 +1,22 @@
+{
+  "sla_defaults": {
+    "EMERGENCY": 7,
+    "SERVICE": 30,
+    "INFRASTRUCTURE": 90,
+    "POLICY": 180
+  },
+  "sector_sla_mapping": {
+    "HEALTH": "EMERGENCY",
+    "SECURITY": "EMERGENCY",
+    "WATER": "EMERGENCY",
+    "INFRASTRUCTURE": "INFRASTRUCTURE",
+    "LAND": "POLICY",
+    "EDUCATION": "SERVICE",
+    "AGRICULTURE": "SERVICE",
+    "EMPLOYMENT": "SERVICE",
+    "ENVIRONMENT": "SERVICE",
+    "TRANSPORT": "INFRASTRUCTURE",
+    "HOUSING": "INFRASTRUCTURE",
+    "FINANCE": "POLICY"
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "routing_rules": [
+    {
+      "category": "robbery",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "assault",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "theft",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 2
+    },
+    {
+      "category": "suspicious_activity",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 3
+    },
+    {
+      "category": "gang_activity",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "drug_trafficking",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "domestic_violence",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "stalking",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 2
+    },
+    {
+      "category": "pothole",
+      "agency_name": "Nairobi County Roads Department",
+      "sla_type": "INFRASTRUCTURE",
+      "priority": 2
+    },
+    {
+      "category": "congestion",
+      "agency_name": "National Transport and Safety Authority",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "accident",
+      "agency_name": "National Police Service",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "public_transport_delay",
+      "agency_name": "National Transport and Safety Authority",
+      "sla_type": "SERVICE",
+      "priority": 3
+    },
+    {
+      "category": "road_closure",
+      "agency_name": "Kenya Urban Roads Authority",
+      "sla_type": "INFRASTRUCTURE",
+      "priority": 2
+    },
+    {
+      "category": "unsafe_driving",
+      "agency_name": "National Transport and Safety Authority",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "matatu_violation",
+      "agency_name": "National Transport and Safety Authority",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "broken_water_main",
+      "agency_name": "Nairobi City Water & Sewerage Company",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "no_electricity",
+      "agency_name": "Kenya Power & Lighting Company",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "damaged_streetlight",
+      "agency_name": "Kenya Power & Lighting Company",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "building_collapse_risk",
+      "agency_name": "Nairobi County Planning Department",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "waste_management",
+      "agency_name": "Nairobi County Waste Management",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "drug_shortage",
+      "agency_name": "Nairobi County Health Department",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "facility_closure",
+      "agency_name": "Nairobi County Health Department",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "staff_shortage",
+      "agency_name": "Nairobi County Health Department",
+      "sla_type": "SERVICE",
+      "priority": 3
+    },
+    {
+      "category": "disease_outbreak",
+      "agency_name": "Ministry of Health",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "illegal_dumping",
+      "agency_name": "National Environment Management Authority",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "deforestation",
+      "agency_name": "Kenya Forest Service",
+      "sla_type": "INFRASTRUCTURE",
+      "priority": 1
+    },
+    {
+      "category": "land_grabbing",
+      "agency_name": "Nairobi County Lands Department",
+      "sla_type": "POLICY",
+      "priority": 1
+    },
+    {
+      "category": "air_pollution",
+      "agency_name": "National Environment Management Authority",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "noise_pollution",
+      "agency_name": "National Environment Management Authority",
+      "sla_type": "SERVICE",
+      "priority": 3
+    },
+    {
+      "category": "job_scam",
+      "agency_name": "Ministry of Labour and Social Protection",
+      "sla_type": "SERVICE",
+      "priority": 1
+    },
+    {
+      "category": "wage_theft",
+      "agency_name": "Ministry of Labour and Social Protection",
+      "sla_type": "SERVICE",
+      "priority": 1
+    },
+    {
+      "category": "unfair_labor",
+      "agency_name": "Ministry of Labour and Social Protection",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "crop_disease",
+      "agency_name": "Ministry of Agriculture and Livestock Development",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "pest_infestation",
+      "agency_name": "Ministry of Agriculture and Livestock Development",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "livestock_disease",
+      "agency_name": "Ministry of Agriculture and Livestock Development",
+      "sla_type": "SERVICE",
+      "priority": 2
+    },
+    {
+      "category": "agricultural_inputs",
+      "agency_name": "Ministry of Agriculture and Livestock Development",
+      "sla_type": "SERVICE",
+      "priority": 3
+    },
+    {
+      "category": "medical_emergency",
+      "agency_name": "Nairobi County Fire Department",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "fire",
+      "agency_name": "Nairobi County Fire Department",
+      "sla_type": "EMERGENCY",
+      "priority": 1
+    },
+    {
+      "category": "other",
+      "agency_name": "County Government of Nairobi (Executive)",
+      "sla_type": "SERVICE",
+      "priority": 5
+    }
+  ]
+}

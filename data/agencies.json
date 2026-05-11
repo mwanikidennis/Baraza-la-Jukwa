@@ -1,0 +1,302 @@
+[
+  {
+    "agency_name": "Nairobi City Water & Sewerage Company",
+    "agency_type": "COUNTY",
+    "contact_email": "info@nairobiwater.co.ke",
+    "contact_phone": "+254-20-2722950",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Kenya Power & Lighting Company",
+    "agency_type": "PARASTATAL",
+    "contact_email": "customercare@kplc.co.ke",
+    "contact_phone": "+254-20-3222111",
+    "default_sla_days": {
+      "EMERGENCY": 3,
+      "SERVICE": 14,
+      "INFRASTRUCTURE": 60,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Nairobi County Roads Department",
+    "agency_type": "COUNTY",
+    "contact_email": "roads@nairobi.go.ke",
+    "contact_phone": "+254-20-2522299",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "National Police Service",
+    "agency_type": "NATIONAL",
+    "contact_email": "info@nationalpolice.go.ke",
+    "contact_phone": "+254-20-2723111",
+    "default_sla_days": {
+      "EMERGENCY": 1,
+      "SERVICE": 7,
+      "INFRASTRUCTURE": 30,
+      "POLICY": 90
+    }
+  },
+  {
+    "agency_name": "Nairobi County Health Department",
+    "agency_type": "COUNTY",
+    "contact_email": "health@nairobi.go.ke",
+    "contact_phone": "+254-20-2522600",
+    "default_sla_days": {
+      "EMERGENCY": 3,
+      "SERVICE": 14,
+      "INFRASTRUCTURE": 60,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Kenya Urban Roads Authority",
+    "agency_type": "PARASTATAL",
+    "contact_email": "info@kura.go.ke",
+    "contact_phone": "+254-20-8010600",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "National Environment Management Authority",
+    "agency_type": "REGULATORY",
+    "contact_email": "info@nema.go.ke",
+    "contact_phone": "+254-20-2185710",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Nairobi County Fire Department",
+    "agency_type": "COUNTY",
+    "contact_email": "fire@nairobi.go.ke",
+    "contact_phone": "+254-20-222181",
+    "default_sla_days": {
+      "EMERGENCY": 1,
+      "SERVICE": 7,
+      "INFRASTRUCTURE": 30,
+      "POLICY": 90
+    }
+  },
+  {
+    "agency_name": "County Government of Nairobi (Executive)",
+    "agency_type": "COUNTY",
+    "contact_email": "executive@nairobi.go.ke",
+    "contact_phone": "+254-20-2522299",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Ministry of Health",
+    "agency_type": "NATIONAL",
+    "contact_email": "info@health.go.ke",
+    "contact_phone": "+254-20-2716200",
+    "default_sla_days": {
+      "EMERGENCY": 3,
+      "SERVICE": 14,
+      "INFRASTRUCTURE": 60,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Kenya Revenue Authority",
+    "agency_type": "PARASTATAL",
+    "contact_email": "callcentre@kra.go.ke",
+    "contact_phone": "+254-20-3222000",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Nairobi County Education Department",
+    "agency_type": "COUNTY",
+    "contact_email": "education@nairobi.go.ke",
+    "contact_phone": "+254-20-2522300",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Nairobi County Lands Department",
+    "agency_type": "COUNTY",
+    "contact_email": "lands@nairobi.go.ke",
+    "contact_phone": "+254-20-2522400",
+    "default_sla_days": {
+      "EMERGENCY": 14,
+      "SERVICE": 60,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Ministry of Transport",
+    "agency_type": "NATIONAL",
+    "contact_email": "info@transport.go.ke",
+    "contact_phone": "+254-20-2725800",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "National Youth Service",
+    "agency_type": "NATIONAL",
+    "contact_email": "info@nys.go.ke",
+    "contact_phone": "+254-20-2332040",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Kenya Bureau of Standards",
+    "agency_type": "REGULATORY",
+    "contact_email": "info@kebs.org",
+    "contact_phone": "+254-20-6948000",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Nairobi County Waste Management",
+    "agency_type": "COUNTY",
+    "contact_email": "waste@nairobi.go.ke",
+    "contact_phone": "+254-20-2522500",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 14,
+      "INFRASTRUCTURE": 60,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Kenya Water Towers Agency",
+    "agency_type": "PARASTATAL",
+    "contact_email": "info@kwta.go.ke",
+    "contact_phone": "+254-20-2724400",
+    "default_sla_days": {
+      "EMERGENCY": 14,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Nairobi Metropolitan Services",
+    "agency_type": "NATIONAL",
+    "contact_email": "info@nms.go.ke",
+    "contact_phone": "+254-20-2086900",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Independent Policing Oversight Authority",
+    "agency_type": "REGULATORY",
+    "contact_email": "info@ipoa.go.ke",
+    "contact_phone": "+254-20-2719000",
+    "default_sla_days": {
+      "EMERGENCY": 3,
+      "SERVICE": 14,
+      "INFRASTRUCTURE": 30,
+      "POLICY": 90
+    }
+  },
+  {
+    "agency_name": "National Transport and Safety Authority",
+    "agency_type": "REGULATORY",
+    "contact_email": "info@ntsa.go.ke",
+    "contact_phone": "+254-20-2610100",
+    "default_sla_days": {
+      "EMERGENCY": 3,
+      "SERVICE": 14,
+      "INFRASTRUCTURE": 60,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Ministry of Labour and Social Protection",
+    "agency_type": "NATIONAL",
+    "contact_email": "info@labour.go.ke",
+    "contact_phone": "+254-20-2729600",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Kenya Forest Service",
+    "agency_type": "PARASTATAL",
+    "contact_email": "info@kfs.go.ke",
+    "contact_phone": "+254-20-2100100",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Ministry of Agriculture and Livestock Development",
+    "agency_type": "NATIONAL",
+    "contact_email": "info@agriculture.go.ke",
+    "contact_phone": "+254-20-2718800",
+    "default_sla_days": {
+      "EMERGENCY": 7,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  },
+  {
+    "agency_name": "Nairobi County Planning Department",
+    "agency_type": "COUNTY",
+    "contact_email": "planning@nairobi.go.ke",
+    "contact_phone": "+254-20-2522600",
+    "default_sla_days": {
+      "EMERGENCY": 14,
+      "SERVICE": 30,
+      "INFRASTRUCTURE": 90,
+      "POLICY": 180
+    }
+  }
+]
