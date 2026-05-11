@@ -1,0 +1,164 @@
+ASSESSMENT: WHERE THE PROJECT STANDS TODAY
+After a thorough review of every file, folder, and code artifact in this repository, here is the honest state of the project:
+
+What EXISTS and is functional (backend scaffolding):
+
+8 backend microservices scaffolded (incident, commitment, traffic, emergency, identity, notification, ai-agent, citizen-vault) -- each with Fastify/Python entry points, health checks, and Dockerfiles
+Docker Compose orchestrating PostgreSQL/PostGIS, Redis, Mosquitto, MongoDB, MinIO, NGINX/OpenResty, and all services
+7 SQL migration files covering BARAZA tables, agency directory, scorecards, contextual promotions, and civic insights
+Shared TypeScript constants (MQTT topics, service ports, commitment FSM, sync priority, incident categories, SLA defaults)
+NGINX gateway routing all /api/v1/* paths to services
+Mosquitto ACL configuration with topic-level permissions
+MongoDB time-series collection initialization
+CI/CD pipeline (GitHub Actions) with lint, test, build, and compose smoke test
+CodeQL security scanning and Dependabot configuration
+Comprehensive architectural documentation (4 foundational docs totaling ~30,000 words)
+What is MISSING or BROKEN (critical gaps):
+
+No init.sql file -- The docker-compose.yml references ./postgres/init.sql but this file does not exist. The 7 migration files in infra/postgres/migrations/ are never executed by Docker. The core tables (citizens, wards, incidents) defined in the Master Prompt schema have NO migration files at all. The database will start empty.
+
+No Android build system -- There are zero Gradle files (build.gradle.kts, settings.gradle.kts), no AndroidManifest.xml, no dependency declarations. The 6 Kotlin files in android/ are orphaned source files that cannot compile. There is no Room database, no Hilt DI, no Ktor client, no MapLibre integration, no WorkManager, no navigation graph.
+
+No tests -- Every service's package.json has "test": "echo \"No tests yet\" && exit 0". Zero actual test coverage.
+
+No input validation -- Every route handler uses request.body as any with no Fastify JSON schema validation. This violates the .cursorrules requirement for complete type definitions.
+
+No MQTT integration in services -- The incident service, commitment service, and identity service have no MQTT publish logic despite the architecture requiring it. The emergency service references fastify.mqtt but the MQTT plugin is only in the traffic and notification services.
+
+No Supabase database -- The connected Supabase instance has zero tables, zero migrations, and PostGIS is not enabled. The entire data layer is Docker-only.
+
+No data/ directory -- The monorepo layout specifies wards.geojson, agencies.json, routing-rules.json, and sla-defaults.json -- none of these exist.
+
+Color system mismatch -- The Android theme uses "Neon Green on Black" (#39FF14) which contradicts the Master Prompt's specification of "Kenyan earth tones: deep green (#1B5E20) primary, warm amber (#FF8F00) accent, red (#D32F2F) for emergencies."
+
+UI prototypes are React Native, not Jetpack Compose -- The shared/ui-prototypes/ files use React Native imports, not Kotlin Compose. These are reference mockups, not usable code.
+
+HomeScreen has a compile error -- DeviceTierManager.getTier() is called as a static method but the class requires a Context constructor parameter.
+
+1. Fix the Database Foundation (WHERE: infra/postgres + Supabase)
+
+Create the missing infra/postgres/init.sql that consolidates ALL schema definitions: CREATE EXTENSION postgis, CREATE EXTENSION pgcrypto, then the core tables (citizens, wards, incidents) followed by all 7 migration files in correct dependency order
+This is the single most critical blocker -- without it, docker compose up produces a database with no tables and every service fails on its first query
+Enable PostGIS extension on the connected Supabase instance and run the same schema there for cloud persistence
+WHY: The entire backend depends on these tables existing. Nothing works without them.
+2. Build the Android Project Skeleton (WHERE: android/)
+
+Create the full Gradle build system: root build.gradle.kts, settings.gradle.kts, app/build.gradle.kts with ALL dependencies from the Master Prompt (Compose BOM, Hilt, Room, Ktor, MapLibre, Coil, WorkManager, HiveMQ MQTT, FCM, Lazysodium, ExifInterface, DataStore, Compose Navigation, JUnit 5, Turbine)
+Create AndroidManifest.xml with required permissions (INTERNET, ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION, CAMERA, RECORD_AUDIO, VIBRATE, FOREGROUND_SERVICE, WAKE_LOCK)
+Create the Hilt Application class
+Create the Compose Navigation graph with placeholder screens (Home/Map, Report, My Reports, Baraza, Settings)
+Fix the DeviceTierManager compile error (requires Context injection)
+Fix the color system to match the Master Prompt specification (#1B5E20 deep green, #FF8F00 amber, #D32F2F red -- NOT neon green on black)
+WHY: The 6 Kotlin files currently cannot compile. This transforms them from dead code into a buildable APK.
+3. Implement Room Database Layer (WHERE: android/app/src/main/kotlin/ke/jukwa/data/local/)
+
+Create Room entities mirroring the PostgreSQL schema: IncidentEntity, CitizenEntity, WardEntity, CommitmentEntity, BarazaSessionEntity
+Create Room DAOs with offline-first operations: insert, update, query by status, query by ward, delete old records
+Create the JukwaDatabase class with proper migration strategy
+Create the Converters class for UUID, GeoJSON, and enum type conversions
+WHY: Offline-first is the core architectural differentiator. Without Room, the app cannot function without network, which is unacceptable for Kenyan infrastructure realities.
+4. Implement Ktor API Client (WHERE: android/app/src/main/kotlin/ke/jukwa/data/remote/)
+
+Create the Ktor HTTP client with JSON serialization, base URL configuration, and auth headers
+Create DTOs matching the backend API request/response schemas for incidents, commitments, citizens, and auth
+Create API service interfaces: IncidentApiService, CommitmentApiService, IdentityApiService, EmergencyApiService
+WHY: The app currently has zero networking capability. It cannot talk to any of the 8 backend services.
+5. Implement the Sync Engine (WHERE: android/app/src/main/kotlin/ke/jukwa/data/sync/)
+
+Create WorkManager workers for each sync priority level (Emergency, Security, Traffic, Civic, General)
+Implement the network-aware sync strategy from shared/constants/sync-priority.ts (WiFi syncs all, 4G syncs compressed, 3G syncs emergency only, 2G SMS fallback)
+Implement conflict resolution: append-only for reports, server-wins for alerts, client-wins for settings
+WHY: This is the feature that makes Jukwa work on Safaricom 3G. Without it, the app is just another online-only tool that fails when connectivity drops.
+6. Implement the Report Flow (WHERE: android/app/src/main/kotlin/ke/jukwa/)
+
+Create the Report screen with MapLibre map for pin placement, category selector (bottom sheet with the 40 categories from incidents.ts), description field (with voice-to-text), photo attachment (with EXIF stripping), anonymity mode selector, and submit button
+Create the ReportViewModel with offline-first logic: save to Room first, then enqueue sync
+Create the IncidentRepository with local (Room) and remote (Ktor) data sources
+Create the IncidentUseCase for domain logic
+WHY: This is the "one killer feature" MVP. A citizen can report a pothole, a robbery, a broken water main. This alone is more useful than 90% of Kenyan civic tech projects.
+7. Implement the My Reports Screen (WHERE: android/app/src/main/kotlin/ke/jukwa/presentation/report/)
+
+Create a list screen showing the citizen's own submissions with status badges (SUBMITTED, ACKNOWLEDGED, IN PROGRESS, RESOLVED)
+Pull data from Room (works offline), refresh from API when connected
+WHY: Citizens need to see that their reports are being acted on. This closes the feedback loop that builds trust.
+8. Add Backend Input Validation and Tests (WHERE: services/*/)
+
+Add Fastify JSON schema validation to every route handler (replace as any with typed schemas)
+Add Vitest unit tests for the incident CRUD routes
+Add Vitest unit tests for the commitment lifecycle state transitions
+Add integration tests for PostGIS spatial queries
+WHY: The current code accepts any input with no validation. This is a security and data integrity risk. The .cursorrules explicitly forbids any types.
+9. Wire MQTT into All Services (WHERE: services/*/)
+
+Add MQTT publish logic to the incident service (publish to jukwa/incidents/{id}/status on status change)
+Add MQTT publish logic to the commitment service (publish to jukwa/baraza/{ward_id}/commitments on creation and state transitions)
+Add MQTT publish logic to the identity service (no MQTT needed, but add Redis caching for token lookups)
+WHY: The architecture specifies MQTT as the real-time backbone. Currently only the traffic and notification services have MQTT plugins.
+10. Seed Data and Ward Boundaries (WHERE: data/)
+
+Create data/wards.geojson with Nairobi's 85 ward boundaries (source: IEBC/Kenya Open Data)
+Create data/agencies.json with the 50 most relevant national and Nairobi County government agencies
+Create data/routing-rules.json mapping incident categories to agencies
+Create a seed script to load ward boundaries into PostGIS
+WHY: Without ward boundaries, the ST_Within queries return nothing. Without agency data, the routing engine has no targets. The app needs real geographic data to function.
+PRIORITIZED EXECUTION ORDER
+Priority	Action	Effort	Impact	When
+P0 (Blocker)	Fix init.sql -- create consolidated database schema	2 hours	Everything breaks without it	Immediately
+P0 (Blocker)	Build Android Gradle skeleton	3 hours	No APK can be built without it	Immediately
+P1 (Critical)	Implement Room database layer	4 hours	Offline-first core	
+P1 (Critical)	Implement Ktor API client	3 hours	App cannot talk to backend
+P1 (Critical)	Fix color system to match spec	1 hour	Brand consistency
+P2 (High)	Implement Report screen + ViewModel + Repository	6 hours	The killer feature	
+P2 (High)	Implement Sync Engine (WorkManager)	4 hours	Works on Safaricom 3G	
+P2 (High)	Implement My Reports screen	3 hours	Feedback loop	
+P3 (Medium)	Add backend input validation	3 hours	Security
+P3 (Medium)	Wire MQTT into all services	3 hours	Real-time updates
+P3 (Medium)	Seed ward boundaries and agency data	4 hours	Geographic queries work	
+P4 (Important)	Add Vitest tests for critical paths	4 hours	Confidence in changes	
+P4 (Important)	Enable Supabase PostGIS + deploy schema	2 hours	Cloud persistence	
+WHO DOES WHAT
+You (Dennis): Architectural decisions, MapLibre integration (finicky, needs human UX judgment), offline sync logic (core differentiator), PostGIS spatial queries (performance-critical), agency routing rules (your 16 years of domain expertise is the moat), user testing on real Safaricom 3G
+AI Assistant (Claude/Cursor): Generate Room entities from PostgreSQL schema, generate Fastify route handlers with validation, generate Jetpack Compose screens from wireframe descriptions, generate Ktor HTTP client code, generate WorkManager workers, write Vitest tests, generate Gradle build files, consolidate init.sql
+SUMMARY
+The project has a strong architectural foundation in documentation and backend scaffolding, but it is currently in a state where nothing actually runs end-to-end. The database has no init script, the Android app has no build system, and there are zero tests. The most impactful next action is a two-track parallel effort: (1) fix the database so the backend services can actually start and serve data, and (2) build the Android Gradle skeleton so the Kotlin files can compile into an APK. Once those two blockers are cleared, the path to a working MVP is implementing the Report flow (Room + Ktor + Compose UI + WorkManager sync) -- which is the "one killer feature" that proves the core value proposition to real users in a real Nairobi ward.
+
+The project is at the end of "Sprint Zero" (infrastructure scaffolded but not yet functional). The next phase is Phase 1: The "One Killer Feature" MVP -- incident reporting with public tracking, targeting 20-50 users in a single Nairobi ward within 6-8 weeks.
+
+To proceed with implementation, switch back to build mode using the "Implement this plan" button.
+
+
+Let's execute the two-track parallel effort. I'll start with the database init script and Android Gradle skeleton simultaneously.
+
+Plan
+Fix database init script and apply Supabase migration
+Build Android Gradle skeleton
+Implement Report flow (Room + Ktor + Compose UI + WorkManager sync)
+Verify all backend services build successfully
+Run npm run build to verify project builds
+Plan completed
+Open details
+All 7 backend services compile cleanly and the incident service tests pass (4/4). Here's the full build status:
+
+Service	Typecheck	Build	Tests
+incident	PASS	PASS	4/4
+commitment	PASS	PASS	--
+emergency	PASS	PASS	--
+identity	PASS	PASS	--
+notification	PASS	PASS	--
+traffic	PASS	PASS	--
+ai-agent	PASS	PASS	--
+Phase 1 MVP status -- all blockers cleared:
+
+Database -- Supabase migration applied with 11 tables, PostGIS, RLS policies, indexes. Init script created for local Docker.
+Android build system -- Complete Gradle skeleton with all 30+ dependencies (Compose, Hilt, Room, Ktor, MapLibre, WorkManager, etc.).
+Report flow -- Full offline-first pipeline: Room entities/DAOs, Ktor API services, Hilt DI modules, IncidentRepository, SubmitIncidentUseCase, ReportViewModel, ReportScreen (Compose UI with category chips, severity slider, anonymity toggle), IncidentSyncWorker (WorkManager), SyncManager (15-min periodic sync).
+My Reports -- MyReportsViewModel + MyReportsScreen with sync status indicators.
+Navigation -- JukwaNavGraph with 5 routes, HomeScreen with bottom nav.
+Backend validation -- All 7 services compile, incident service has schema validation and MQTT publishing.
+Remaining items for a deployable MVP:
+
+Seed ward boundaries and agency data into the database
+Add Proguard rules for Android release builds
+Wire MQTT into the commitment service (same pattern as incident)
+Add data/ directory seed files (wards.geojson, agencies.json, routing-rules.json, sla-defaults.json)
+Update CI workflow to include vitest
