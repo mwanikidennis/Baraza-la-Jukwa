@@ -2,6 +2,8 @@ package ke.jukwa.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,6 +14,12 @@ import ke.jukwa.data.local.dao.CitizenDao
 import ke.jukwa.data.local.dao.CommitmentDao
 import ke.jukwa.data.local.dao.IncidentDao
 import javax.inject.Singleton
+
+val MIGRATION_1_2 = object : Migration(1, 2) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Future schema migrations go here
+    }
+}
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -25,6 +33,7 @@ object DatabaseModule {
             JukwaDatabase::class.java,
             "jukwa.db"
         )
+            .addMigrations(MIGRATION_1_2)
             .fallbackToDestructiveMigration()
             .build()
     }

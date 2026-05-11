@@ -1,5 +1,5 @@
 JUKWA PROJECT ASSESSMENT & WORKPLAN
-Updated: 2026-05-11 (Session 2)
+Updated: 2026-05-11 (Session 2, Final)
 
 ================================================================================
 SECTION 1: STATUS CHECKLIST -- WHAT EXISTS vs WHAT REMAINS
@@ -23,29 +23,27 @@ Legend: [DONE] = Implemented and verified | [PARTIAL] = Exists but incomplete | 
 [PARTIAL] Ward boundary precision -- Current boundaries are approximate rectangles (~550m).
            Production needs actual IEBC/Kenya Open Data GeoJSON polygons.
 [TODO]     Real ward GeoJSON data file (data/wards.geojson) from IEBC source
-[TODO]     Redis caching for identity token lookups
+[TODO]     Redis caching for identity token lookups (plugin created, not yet used in routes)
 [TODO]     MongoDB time-series data for traffic telemetry (schema exists, no data)
 
 --- BACKEND SERVICES (7 Node.js + 1 Python) ---
 
 [DONE] incident-service (3001) -- Full CRUD, JSON schema validation, MQTT publish, 4 tests passing
 [DONE] commitment-service (3002) -- Full CRUD, JSON schema validation, MQTT publish, FSM validation, 6 tests passing
-[DONE] emergency-service (3004) -- MQTT plugin, health check, compiles cleanly
-[DONE] identity-service (3006) -- Health check, compiles cleanly
+[DONE] emergency-service (3004) -- SOS dispatch, MQTT QoS 2, JSON schema validation, 9 tests passing
+[DONE] identity-service (3006) -- JSON schema validation, Redis caching plugin, 6 tests passing
 [DONE] notification-service (3007) -- MQTT plugin, FCM plugin, compiles cleanly
 [DONE] traffic-service (3003) -- MongoDB plugin, MQTT plugin, compiles cleanly
 [DONE] ai-agent-service (3010) -- Triage route, compiles cleanly
 [DONE] citizen-vault-service (3011) -- Python FastAPI, Tor integration
 
-[PARTIAL] Backend input validation -- Incident and Commitment services have full schema
-           validation. Emergency, Identity, Notification, Traffic services still use `as any`.
-[PARTIAL] MQTT integration -- Incident and Commitment services publish to MQTT.
-           Emergency service has MQTT plugin but no publish logic.
+[PARTIAL] Backend input validation -- Incident, Commitment, Emergency, Identity services have
+           full schema validation. Notification, Traffic services still use `as any`.
+[PARTIAL] MQTT integration -- Incident, Commitment, Emergency services publish to MQTT.
            Identity service has no MQTT (correct per architecture -- uses Redis instead).
-[PARTIAL] Test coverage -- Incident (4 tests), Commitment (6 tests).
-           Emergency, Identity, Notification, Traffic, AI-Agent: zero tests.
-[TODO]     Emergency service: add dispatch route with MQTT publish to jukwa/emergency/{county}/dispatch
-[TODO]     Identity service: add Redis caching for token lookups
+[PARTIAL] Test coverage -- Incident (4), Commitment (6), Emergency (9), Identity (6) = 25 tests.
+           Notification, Traffic, AI-Agent: zero tests.
+[TODO]     Notification service: add FCM push notification sending logic
 [TODO]     Notification service: add FCM push notification sending logic
 [TODO]     Traffic service: add MQTT subscribe for sensor telemetry ingestion
 [TODO]     Integration tests for PostGIS spatial queries (ST_DWithin, ST_Within)
@@ -74,6 +72,8 @@ Legend: [DONE] = Implemented and verified | [PARTIAL] = Exists but incomplete | 
 [DONE] IncidentSyncWorker (WorkManager CoroutineWorker)
 [DONE] SyncManager (15-minute periodic sync, network + battery constraints)
 [DONE] Proguard rules for release builds (all 12 library categories covered)
+[DONE] Room type converters (UUID, List<String>, enums)
+[DONE] Room migration strategy (MIGRATION_1_2 + fallbackToDestructiveMigration)
 
 [PARTIAL] MapLibre integration -- Not yet implemented. HomeScreen has placeholder for map.
 [TODO]     MapLibre map on HomeScreen with incident markers
@@ -88,8 +88,7 @@ Legend: [DONE] = Implemented and verified | [PARTIAL] = Exists but incomplete | 
 [TODO]     CommitmentApiService + CommitmentRepository
 [TODO]     WardEntity + WardDao for offline ward data
 [TODO]     BarazaSessionEntity + BarazaDao
-[TODO]     Room type converters for UUID, GeoJSON, enums
-[TODO]     Room migration strategy (version upgrades)
+[TODO]     Room type converters for GeoJSON (UUID and List<String> done)
 [TODO]     Network-aware sync strategy (WiFi=all, 4G=compressed, 3G=emergency only)
 [TODO]     Conflict resolution (append-only reports, server-wins alerts, client-wins settings)
 
@@ -257,23 +256,27 @@ P2        | Implement Report screen + ViewModel + Repository  | DONE
 P2        | Implement Sync Engine (WorkManager)                | DONE
 P2        | Implement My Reports screen                        | DONE
 P3        | Add backend input validation (incident+commitment)| DONE
-P3        | Wire MQTT into services (incident+commitment)     | DONE
+P3        | Wire MQTT into services (incident+commitment)      | DONE
 P3        | Seed ward boundaries and agency data              | DONE
-P4        | Add Vitest tests (incident: 4, commitment: 6)     | DONE
+P4        | Add Vitest tests (25 total across 4 services)     | DONE
 P4        | Enable Supabase PostGIS + deploy schema            | DONE
 P4        | Add Proguard rules for Android release             | DONE
 P4        | Create data/ seed files                           | DONE
 P4        | Update CI workflow for vitest                     | DONE
+P4        | Emergency service: dispatch + MQTT QoS 2 + tests   | DONE
+P4        | Identity service: validation + Redis + tests       | DONE
+P4        | Room type converters + migration strategy          | DONE
+P4        | Docker Compose hybrid Supabase+Docker architecture | DONE
+P4        | .env + .env.example with DATABASE_MODE             | DONE
+P4        | ARCHITECTURE.md updated with hybrid model          | DONE
 ----------|---------------------------------------------------|--------
 P5        | MapLibre map on HomeScreen                        | TODO
 P5        | Map pin placement on ReportScreen                 | TODO
 P5        | Photo attachment with EXIF stripping              | TODO
-P5        | Emergency service dispatch route + MQTT publish    | TODO
-P5        | Identity service Redis caching                    | TODO
 P5        | Notification service FCM sending logic            | TODO
 P5        | Traffic service MQTT subscribe for sensors        | TODO
-P5        | Backend validation for remaining 4 services       | TODO
-P5        | Tests for remaining 5 services                     | TODO
+P5        | Backend validation for remaining 2 services       | TODO
+P5        | Tests for remaining 3 services                     | TODO
 P6        | Voice-to-text for description field               | TODO
 P6        | BarazaScreen implementation                       | TODO
 P6        | SettingsScreen implementation                     | TODO
@@ -281,7 +284,6 @@ P6        | FCM push notification receiver                    | TODO
 P6        | HiveMQ MQTT client for real-time alerts            | TODO
 P6        | DataStore for user preferences                    | TODO
 P6        | CommitmentApiService + CommitmentRepository        | TODO
-P6        | Room type converters (UUID, GeoJSON, enums)       | TODO
 P6        | Network-aware sync strategy (WiFi/4G/3G/2G)       | TODO
 P6        | Conflict resolution logic                         | TODO
 P6        | Real IEBC ward GeoJSON boundary data              | TODO
@@ -289,9 +291,10 @@ P6        | E2E integration tests                             | TODO
 P6        | Android instrumented tests                        | TODO
 
 ================================================================================
-SECTION 4: WHAT WAS ACCOMPLISHED THIS SESSION
+SECTION 4: WHAT WAS ACCOMPLISHED (Sessions 1-2 Combined)
 ================================================================================
 
+SESSION 1:
 1. DATABASE FOUNDATION (P0 -- Blocker)
    - Created infra/postgres/init.sql with ALL tables in dependency order
    - Applied Supabase migration 001_jukwa_core_schema.sql (11 tables, PostGIS, RLS)
@@ -331,6 +334,41 @@ SECTION 4: WHAT WAS ACCOMPLISHED THIS SESSION
    - Replaced neon green (#39FF14) with Kenyan earth tones
    - Deep green (#1B5E20), warm amber (#FF8F00), emergency red (#D32F2F)
    - Material 3 light + dark themes
+
+SESSION 2:
+7. COMMITMENT SERVICE (P3-P4)
+   - MQTT plugin + publish to jukwa/baraza/{ward_id}/commitments
+   - Full CRUD routes with JSON schema validation
+   - FSM-validated status transitions (11 states, 4 origin types, 12 sectors)
+   - 6 tests passing
+
+8. EMERGENCY SERVICE (P4)
+   - Dispatch route rewrite with JSON schema validation
+   - MQTT publish to jukwa/emergency/{county}/dispatch (QoS 2)
+   - 9 tests passing
+
+9. IDENTITY SERVICE (P4)
+   - JSON schema validation for register, get profile, update preferences
+   - Redis caching plugin (graceful degradation if unavailable)
+   - 6 tests passing
+
+10. ANDROID ROOM ENHANCEMENTS
+    - Type converters: UUID <-> String, List<String> <-> comma-separated
+    - Migration strategy: MIGRATION_1_2 placeholder + fallbackToDestructiveMigration
+
+11. INFRASTRUCTURE INTEGRATION
+    - Docker Compose updated for hybrid Supabase+Docker architecture
+    - PostgreSQL container moved to `--profile local-db` (optional for offline dev)
+    - DATABASE_MODE env var: supabase (default) or local
+    - All services receive SUPABASE_URL, SUPABASE_ANON_KEY, DATABASE_MODE
+    - .env + .env.example updated with full tier documentation
+
+12. DOCUMENTATION
+    - ARCHITECTURE.md rewritten with hybrid database model, service map, MQTT hierarchy
+    - Assessment document updated with current status checklist
+    - Next-session workplan created (PHASE_1_NEXT_SESSION_WORKPLAN)
+
+TOTAL TEST COUNT: 25 tests passing across 4 services
 
 ================================================================================
 SECTION 5: ORIGINAL ASSESSMENT (Preserved for reference)

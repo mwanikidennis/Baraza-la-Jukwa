@@ -1,9 +1,28 @@
 version: '3.8'
 
+# =============================================================================
+# JUKWA Hybrid Infrastructure
+#
+# DATABASE TIER:
+#   Production: Supabase (PostgreSQL + PostGIS) -- cloud, managed, RLS
+#   Development: Local Docker PostgreSQL -- for offline dev, same schema
+#   Set DATABASE_MODE=local to use this PostgreSQL instead of Supabase
+#
+# NOT REPLACED BY SUPABASE:
+#   - MongoDB: Time-series telemetry (traffic sensors) -- high-write, schema-flexible
+#   - Redis: Caching/sessions -- in-memory, sub-millisecond latency
+#   - Mosquitto MQTT: Real-time pub/sub -- low bandwidth, QoS guarantees, topic ACL
+#
+# See Docs/Start Build/Bolt_AI_Assessment_and_Plan_2026_05_11 Section 2 for rationale
+# =============================================================================
+
 services:
+  # Local PostgreSQL -- only used when DATABASE_MODE=local
+  # Production uses Supabase (SUPABASE_URL + SUPABASE_ANON_KEY)
   postgres:
     image: postgis/postgis:15-3.3
     container_name: jukwa-postgres
+    profiles: ["local-db"]
     environment:
       POSTGRES_USER: ${DB_USER:-jukwaa}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-jukwaa_secret}
@@ -79,6 +98,25 @@ services:
     networks:
       - jukwa_net
 
+  mongodb:
+    image: mongo:7
+    container_name: jukwa-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongodb/init-timeseries.js:/docker-entrypoint-initdb.d/init-timeseries.js:ro
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
+  # ===========================================================================
+  # APPLICATION SERVICES
+  # All services read DATABASE_MODE to decide: Supabase (cloud) or local Docker
+  # When DATABASE_MODE=supabase, DATABASE_URL points to Supabase connection pooler
+  # When DATABASE_MODE=local, DATABASE_URL points to Docker PostgreSQL
+  # ===========================================================================
+
   incident-service:
     build:
       context: ../services/incident
@@ -88,13 +126,14 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3001
-      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - DATABASE_MODE=${DATABASE_MODE:-supabase}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - REDIS_URL=redis://redis:6379
       - MQTT_URL=mqtt://mosquitto:1883
       - JWT_SECRET=${JWT_SECRET:-dev-only-do-not-use-in-prod}
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
       mosquitto:
@@ -118,9 +157,13 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3002
-      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - DATABASE_MODE=${DATABASE_MODE:-supabase}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - MQTT_URL=mqtt://mosquitto:1883
     depends_on:
-      postgres:
+      mosquitto:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -135,10 +178,13 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3004
-      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - DATABASE_MODE=${DATABASE_MODE:-supabase}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - MQTT_URL=mqtt://mosquitto:1883
     depends_on:
-      postgres:
+      mosquitto:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -171,10 +217,14 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3006
-      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - DATABASE_MODE=${DATABASE_MODE:-supabase}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
+      - REDIS_URL=redis://redis:6379
       - JWT_SECRET=${JWT_SECRET:-dev-only-do-not-use-in-prod}
     depends_on:
-      postgres:
+      redis:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -189,26 +239,17 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3003
-      - DATABASE_URL=postgresql://${DB_USER:-jukwaa}:${DB_PASSWORD:-jukwaa_secret}@postgres:5432/${DB_NAME:-jukwaa}
+      - DATABASE_MODE=${DATABASE_MODE:-supabase}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - SUPABASE_URL=${SUPABASE_URL:-}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - MONGODB_URI=mongodb://mongodb:27017/jukwaa_telemetry
       - MQTT_URL=mqtt://mosquitto:1883
     depends_on:
-      postgres:
-        condition: service_healthy
       mongodb:
+        condition: service_started
+      mosquitto:
         condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - jukwa_net
-
-  mongodb:
-    image: mongo:7
-    container_name: jukwa-mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
-      - ./mongodb/init-timeseries.js:/docker-entrypoint-initdb.d/init-timeseries.js:ro
     restart: unless-stopped
     networks:
       - jukwa_net

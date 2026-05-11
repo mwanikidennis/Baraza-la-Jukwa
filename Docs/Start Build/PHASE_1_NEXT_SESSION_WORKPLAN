@@ -1,0 +1,192 @@
+JUKWA PHASE 1: NEXT SESSION WORKPLAN
+Created: 2026-05-11
+Status: Active
+
+================================================================================
+WHAT WAS ACCOMPLISHED (Sessions 1-2)
+================================================================================
+
+BLOCKERS CLEARED:
+  [DONE] Database init.sql + Supabase migration (11 tables, PostGIS, RLS)
+  [DONE] Android Gradle skeleton (30+ dependencies, all Kotlin files compile)
+  [DONE] Report flow (Room + Ktor + Compose UI + WorkManager sync)
+  [DONE] All 7 backend services compile and build
+
+SESSION 2 ADDITIONS:
+  [DONE] Commitment service: MQTT + JSON schema validation + FSM + 6 tests
+  [DONE] Emergency service: dispatch route rewrite + JSON schema + 9 tests
+  [DONE] Identity service: JSON schema validation + Redis plugin + 6 tests
+  [DONE] 85 Nairobi ward boundaries seeded into Supabase
+  [DONE] 25 Kenyan government agencies seeded into Supabase
+  [DONE] data/ seed files (agencies.json, routing-rules.json, sla-defaults.json)
+  [DONE] Android Proguard rules (12 library categories)
+  [DONE] Room type converters (UUID, List<String>, enums)
+  [DONE] Room migration strategy (MIGRATION_1_2 + fallback)
+  [DONE] Docker Compose updated for hybrid Supabase+Docker architecture
+  [DONE] .env + .env.example updated with DATABASE_MODE, Supabase vars
+  [DONE] ARCHITECTURE.md rewritten with hybrid database model
+  [DONE] CI workflow updated with test artifact upload
+
+TEST COVERAGE:
+  Incident service: 4 tests passing
+  Commitment service: 6 tests passing
+  Emergency service: 9 tests passing
+  Identity service: 6 tests passing
+  Total: 25 tests passing
+
+SUPABASE STATE:
+  11 tables with RLS enabled
+  85 ward boundaries (17 Nairobi constituencies)
+  25 government agencies
+  PostGIS extension enabled
+  All foreign keys and indexes in place
+
+================================================================================
+NEXT SESSION PRIORITIES (Ordered by Impact)
+================================================================================
+
+PRIORITY 5: ANDROID MAP INTEGRATION (The Missing Visual)
+--------------------------------------------------------
+The HomeScreen currently has no map. This is the single most visible gap
+between the current state and a demo-able MVP.
+
+  [TODO] Add MapLibre SDK dependency to build.gradle.kts (already declared)
+  [TODO] Create MapScreen composable with MapLibre map
+  [TODO] Add incident markers on map (from Room incidents Flow)
+  [TODO] Add map pin placement on ReportScreen for location selection
+  [TODO] Request location permissions at runtime
+  [TODO] Center map on user's current location
+  [TODO] Cluster markers at low zoom levels
+
+PRIORITY 5: REMAINING BACKEND VALIDATION
+-----------------------------------------
+  [TODO] Notification service: add JSON schema validation to routes
+  [TODO] Traffic service: add JSON schema validation to routes
+  [TODO] Traffic service: add MQTT subscribe for sensor telemetry
+  [TODO] Notification service: add FCM push notification sending logic
+  [TODO] Add tests for notification and traffic services
+
+PRIORITY 6: ANDROID FEATURE COMPLETION
+---------------------------------------
+  [TODO] BarazaScreen implementation (commitment tracking by ward)
+  [TODO] SettingsScreen implementation (anonymity preference, DataStore)
+  [TODO] CommitmentApiService + CommitmentRepository
+  [TODO] WardEntity + WardDao for offline ward data
+  [TODO] BarazaSessionEntity + BarazaDao
+  [TODO] FCM push notification receiver (MyFirebaseMessagingService)
+  [TODO] HiveMQ MQTT client for real-time incident alerts on Android
+  [TODO] Photo attachment with EXIF stripping (Lazysodium)
+  [TODO] Voice-to-text for description field (Android SpeechRecognizer)
+
+PRIORITY 6: SYNC ENGINE ENHANCEMENT
+------------------------------------
+  [TODO] Network-aware sync strategy:
+         - WiFi: sync all data including media
+         - 4G: sync compressed data, no media
+         - 3G: sync emergency incidents only
+         - 2G: SMS fallback via Africa's Talking
+  [TODO] Conflict resolution:
+         - Append-only for incident reports (server wins on conflict)
+         - Server-wins for alert/status updates
+         - Client-wins for user settings/preferences
+  [TODO] Exponential backoff for failed syncs
+  [TODO] Sync status indicator in UI (syncing/synced/error)
+
+PRIORITY 6: DATA & INFRASTRUCTURE
+----------------------------------
+  [TODO] Real IEBC ward GeoJSON boundary data (replace approximate rectangles)
+  [TODO] E2E integration tests (API -> DB -> MQTT round-trip)
+  [TODO] Android instrumented tests (Room, Ktor)
+  [TODO] Android Lint + Detekt for Kotlin
+  [TODO] Supabase Auth integration (replace custom identity service auth)
+
+PRIORITY 7: PHASE 2 FEATURES (Post-MVP)
+-----------------------------------------
+  [TODO] M-Pesa integration (Safaricom Daraja API)
+  [TODO] Gamification engine (points for verified civic actions)
+  [TODO] Evidence immutable ledger (commitment evidence hashes)
+  [TODO] Automated emergency dispatch (AI severity > 90%)
+  [TODO] Predictive traffic routing (time-series analysis)
+  [TODO] TUI Command Center for TMC operators
+  [TODO] Kong API Gateway (replace NGINX)
+  [TODO] Multi-region PostgreSQL replication
+
+================================================================================
+KEY ARCHITECTURAL DECISIONS (Documented for Reference)
+================================================================================
+
+1. SUPABASE = Primary Database
+   - Free tier: 500MB, 50K MAU, PostGIS, RLS, auto-REST API
+   - Self-host option available for Kenyan data sovereignty
+   - NOT a replacement for MongoDB, Redis, or Mosquitto
+
+2. MONGODB = Time-Series Telemetry (Keep)
+   - Purpose-built for high-write sensor data
+   - Built-in data expiration and aggregation pipeline
+   - MongoDB Atlas free tier (512MB) available if needed
+
+3. MOSQUITTO MQTT = Real-Time Pub/Sub (Keep)
+   - Low bandwidth (critical on Safaricom 3G)
+   - QoS guarantees (0/1/2) -- Supabase Realtime has none
+   - Topic-level ACL security
+   - Industry standard for IoT/telemetry
+
+4. REDIS = Caching (Optional for MVP)
+   - Identity service uses it for token caching
+   - Graceful degradation if unavailable
+   - Add when scaling beyond single server
+
+5. DATABASE_MODE = supabase (default) | local (offline dev)
+   - Services read DATABASE_MODE to choose connection target
+   - Docker PostgreSQL only starts with `--profile local-db`
+
+================================================================================
+FILE MAP (What Exists Where)
+================================================================================
+
+Backend Services:
+  services/incident/     -- Full CRUD, MQTT, validation, 4 tests
+  services/commitment/  -- Full CRUD, MQTT, FSM, validation, 6 tests
+  services/emergency/    -- SOS dispatch, MQTT QoS 2, validation, 9 tests
+  services/identity/     -- Register/auth, Redis cache, validation, 6 tests
+  services/notification/ -- MQTT subscribe, FCM plugin (no send logic yet)
+  services/traffic/      -- MongoDB + MQTT plugins (no subscribe logic yet)
+  services/ai-agent/    -- Triage route (Gemini integration)
+  services/citizen-vault/-- Python FastAPI, Tor, encryption
+
+Android App:
+  android/app/src/main/kotlin/ke/jukwa/
+    app/                 -- JukwaApplication, MainActivity
+    ui/theme/            -- Color.kt, Theme.kt, Type.kt (earth tones)
+    ui/home/             -- HomeScreen (bottom nav, no map yet)
+    core/util/            -- DeviceTierManager
+    presentation/
+      report/            -- ReportScreen, ReportViewModel
+      myreports/         -- MyReportsScreen, MyReportsViewModel
+      baraza/            -- BarazaScreen (placeholder)
+      settings/          -- SettingsScreen (placeholder)
+      navigation/        -- JukwaNavGraph
+    data/
+      local/             -- JukwaDatabase, Converters, 3 entities, 3 DAOs
+      remote/            -- 3 API services, DTOs
+      repository/        -- IncidentRepository
+      sync/              -- IncidentSyncWorker, SyncManager
+    di/                  -- DatabaseModule, NetworkModule
+    domain/incident/     -- SubmitIncidentUseCase
+
+Data Files:
+  data/agencies.json     -- 25 Kenyan government agencies
+  data/routing-rules.json-- 39 category-to-agency mappings
+  data/sla-defaults.json -- SLA windows + sector mapping
+
+Infrastructure:
+  infra/docker-compose.yml -- Hybrid Supabase+Docker architecture
+  infra/postgres/init.sql  -- Consolidated schema (all tables)
+  infra/mosquitto/         -- MQTT broker config + ACL
+  infra/nginx/             -- API gateway routing
+  infra/mongodb/           -- Time-series init script
+
+Documentation:
+  Docs/ARCHITECTURE.md     -- Updated with hybrid database model
+  Docs/Start Build/Bolt_AI_Assessment_and_Plan_2026_05_11 -- Full status checklist
+  Docs/Start Build/PHASE_1_NEXT_SESSION_WORKPLAN -- This file

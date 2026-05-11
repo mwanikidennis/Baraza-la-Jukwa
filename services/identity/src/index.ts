@@ -1,10 +1,12 @@
 import Fastify from 'fastify';
 import dbPlugin from './plugins/db';
+import redisPlugin from './plugins/redis';
 import authRoutes from './routes/auth';
 
 const server = Fastify({ logger: true });
 
 server.register(dbPlugin);
+server.register(redisPlugin);
 server.register(authRoutes);
 
 server.get('/health', async () => {
