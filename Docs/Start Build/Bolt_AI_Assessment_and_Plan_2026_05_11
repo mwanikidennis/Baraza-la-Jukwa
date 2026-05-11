@@ -363,3 +363,35 @@ No Supabase database -- FIXED: Migration applied, 11 tables with RLS, PostGIS en
 No data/ directory -- FIXED: agencies.json, routing-rules.json, sla-defaults.json created
 Color system mismatch -- FIXED: Kenyan earth tones replacing neon green
 HomeScreen compile error -- FIXED: DeviceTierManager now Hilt-injectable with lazy tier
+
+All tests pass. Let me verify the Supabase data is intact.
+
+All data verified. Here's a summary of everything accomplished:
+
+Completed this session:
+
+Task	Status
+Commitment service: MQTT plugin + publish	Done (6 tests passing)
+Commitment service: JSON schema validation + FSM transitions	Done
+Commitment service: Full CRUD routes (create, list, get, status update)	Done
+Data seed files: agencies.json, routing-rules.json, sla-defaults.json	Done
+Supabase: 85 Nairobi ward boundaries seeded	Done
+Supabase: 25 Kenyan government agencies seeded	Done
+Android: Proguard rules for release builds	Done
+CI workflow: test artifact upload added	Done
+Assessment document: comprehensive checklist + database advice	Done
+Database architecture advice (key points):
+
+Supabase is the right choice for the primary database. It is open-source, free tier covers the MVP (500MB, 50K MAU), has built-in auth, RLS, PostGIS, and auto-generated REST API. You can self-host the entire stack later for data sovereignty.
+
+Keep MongoDB for traffic time-series telemetry -- Supabase is relational, not optimized for high-write sensor data.
+
+Keep Mosquitto MQTT -- Supabase Realtime (WebSocket) is NOT a replacement. MQTT uses less bandwidth (critical on Safaricom 3G), has QoS guarantees, and topic-level ACL security.
+
+Redis can wait -- For the MVP, in-memory caching in Fastify services suffices. Add Redis when scaling beyond a single server.
+
+Supabase current state: 11 tables, 85 wards, 25 agencies, PostGIS enabled, RLS on all tables.
+
+Remaining P5 items (next session): MapLibre map integration, emergency dispatch route, remaining service validation/tests, photo attachment, voice-to-text, Baraza/Settings screens.
+
+Executed SQL
