@@ -1,5 +1,5 @@
-# JUKWA Phase 2 Roadmap
-This document outlines the strategic priorities for the next phase of the Jukwa platform development.
+# JUKWA  Roadmap
+This document outlines the strategic priorities of the Jukwa platform development.
 
 ## 1. Privacy & Security (Hardened)
 - [x] **Citizen Vault Relay**: NGO-aligned infrastructure for anonymous reporting.
@@ -24,7 +24,343 @@ This document outlines the strategic priorities for the next phase of the Jukwa 
 
 # JUKWA — Local & CI Setup
 
-This document covers the post-scaffold bring-up. Architecture and module specs live in [`Docs/Start Build/`](../Docs/Start%20Build/).
+---
+Architecture Maps, Flows & Logic
+
+### 1.1 The Master Data Flow — From Citizen to Resolution
+
+Every interaction with Jukwa, regardless of channel, follows a single unified data pipeline. This is the architectural spine that makes the platform coherent. Understanding this flow end-to-end is the first requirement before writing a single line of code.
+
+```
+╔══════════════════════════════════════════════════════════════════════╗
+║                    CITIZEN INPUT CHANNELS                           ║
+║                                                                      ║
+║   📱 Android App    🌐 PWA    📞 USSD/SMS    💬 WhatsApp Bot       ║
+║        │              │           │                │                 ║
+║        └──────────────┴───────────┴────────────────┘                 ║
+║                              │                                       ║
+║                    ┌─────────▼──────────┐                            ║
+║                    │   INPUT NORMALIZER  │                            ║
+║                    │   Every channel     │                            ║
+║                    │   produces the same │                            ║
+║                    │   JSON payload      │                            ║
+║                    └─────────┬──────────┘                            ║
+╚══════════════════════════════╪════════════════════════════════════════╝
+                               │
+                    ┌──────────▼──────────┐
+                    │   PRIVACY GATE       │
+                    │                      │
+                    │  Standard? → minimal │
+                    │    pseudonym ID      │
+                    │                      │
+                    │  Incognito? → route  │
+                    │    via Citizen Vault │
+                    │    strip ALL PII     │
+                    │                      │
+                    │  Verified? → attach  │
+                    │    eCitizen OAuth    │
+                    └──────────┬──────────┘
+                               │
+                    ┌──────────▼──────────┐
+                    │   AI CLASSIFICATION  │
+                    │   ENGINE             │
+                    │                      │
+                    │  1. What type?       │
+                    │     (40 categories)  │
+                    │                      │
+                    │  2. How severe?      │
+                    │     (1-5 score)      │
+                    │                      │
+                    │  3. Who handles it?  │
+                    │     (Agency routing) │
+                    │                      │
+                    │  4. Is it a report   │
+                    │     or a commitment? │
+                    │     (BARAZA triage)  │
+                    └──────────┬──────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+   │   INCIDENT   │  │  COMMITMENT  │  │  EMERGENCY   │
+   │   PIPELINE   │  │  PIPELINE    │  │  PIPELINE    │
+   │              │  │  (BARAZA)    │  │  (< 10 sec)  │
+   │  Pothole     │  │              │  │              │
+   │  Crime       │  │  PS promise  │  │  Accident    │
+   │  Congestion  │  │  Road pledge │  │  Assault     │
+   │  Noise       │  │  Drug supply │  │  Fire        │
+   └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+          │                 │                 │
+          └────────┬────────┘                 │
+                   │                          │
+          ┌────────▼────────┐        ┌────────▼────────┐
+          │  AGENCY ROUTER  │        │  EMERGENCY       │
+          │                 │        │  DISPATCH        │
+          │  NPS, NTSA,     │        │  999/112/114     │
+          │  KURA, KEMSA,   │        │  NARS, Police    │
+          │  County Govts,  │        │  Fire Brigade    │
+          │  NEMA, KPLC...  │        └────────┬────────┘
+          └────────┬────────┘                 │
+                   │                          │
+          ┌────────▼──────────────────────────▼────────┐
+          │           TRACKING & ACCOUNTABILITY         │
+          │                                             │
+          │  SLA Clock Started → Progress Monitored →   │
+          │  Updates Pushed → Citizen Notified →        │
+          │  Fulfillment Claimed → Citizen Verifies →   │
+          │  RESOLVED  or  ESCALATED                    │
+          └────────────────────┬────────────────────────┘
+                               │
+          ┌────────────────────▼────────────────────────┐
+          │           PUBLIC ACCOUNTABILITY LAYER        │
+          │                                             │
+          │  Ward Dashboards │ Agency Scorecards │      │
+          │  National Heatmap │ Civic Insights │        │
+          │  Quarterly Reports │ Media API              │
+          └─────────────────────────────────────────────┘
+```
+
+### 1.2 The Offline-First Sync Logic
+
+This is the flow that makes Jukwa work on Kenyan infrastructure — where a matatu passenger on Thika Road might have 4G one minute and zero bars the next.
+
+```
+CITIZEN CREATES REPORT (offline-capable)
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│         LOCAL DEVICE STORAGE             │
+│         (Room / SQLite)                  │
+│                                          │
+│  Report saved with:                      │
+│    → UUID generated locally              │
+│    → GPS timestamp captured              │
+│    → Media compressed to WebP            │
+│    → EXIF metadata stripped              │
+│    → Priority level assigned             │
+│    → Status: QUEUED_FOR_SYNC             │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────┐
+│      CONNECTIVITY MONITOR                │
+│      (WorkManager + ConnectivityManager) │
+│                                          │
+│  Checks network state continuously:      │
+│                                          │
+│  WiFi detected?                          │
+│    → Sync ALL queued items               │
+│    → Upload full-res media               │
+│                                          │
+│  4G/LTE detected?                        │
+│    → Sync EMERGENCY + SECURITY first     │
+│    → Sync TRAFFIC + CIVIC next           │
+│    → Upload compressed media only        │
+│                                          │
+│  3G/2G detected?                         │
+│    → Sync EMERGENCY only (text + GPS)    │
+│    → Queue everything else               │
+│    → SMS fallback for critical alerts    │
+│                                          │
+│  No connection?                          │
+│    → Everything queues locally            │
+│    → User sees "Will sync when online"   │
+└────────────────┬────────────────────────┘
+                 │
+                 ▼ (when connected)
+┌─────────────────────────────────────────┐
+│      SYNC ENGINE                         │
+│                                          │
+│  1. Send queued reports (priority order) │
+│  2. Pull new alerts for user's ward      │
+│  3. Pull commitment status updates       │
+│  4. Pull SDUI layout updates             │
+│  5. Update offline map tile cache        │
+│  6. Rotate device token (if Incognito)   │
+│                                          │
+│  Conflict resolution:                    │
+│    Reports → append-only, never conflict │
+│    Alerts → server wins (latest = truth) │
+│    Settings → client wins (user intent)  │
+└─────────────────────────────────────────┘
+```
+
+### 1.3 The BARAZA Commitment Lifecycle Flow
+
+This is the accountability engine — the flow that turns a government promise into a tracked, verified, publicly visible obligation.
+
+```
+  ┌─────────────────────┐      ┌──────────────────────┐
+  │  JIM BARAZA FORUM   │      │  CITIZEN DIGITAL      │
+  │  (Field Digitizer   │      │  SUBMISSION           │
+  │   captures promise) │      │  (App/USSD/WhatsApp)  │
+  └──────────┬──────────┘      └───────────┬───────────┘
+             │                              │
+             └──────────┬───────────────────┘
+                        │
+             ┌──────────▼──────────┐
+             │      CAPTURED       │     ← Clock starts
+             │  AI classifies:     │
+             │  Sector + Agency    │
+             └──────────┬──────────┘
+                        │
+             ┌──────────▼──────────┐
+             │     CLASSIFIED      │     ← Public visibility begins
+             │  Agency notified    │        72-hour ACK deadline
+             └──────────┬──────────┘
+                        │
+          ┌─────────────┼─────────────┐
+          │             │             │
+    Agency ACKs    No response   Needs clarity
+          │         (72 hrs)          │
+          ▼             ▼             ▼
+  ┌─────────────┐ ┌──────────┐ ┌───────────┐
+  │ ACKNOWLEDGED│ │ SILENCE  │ │CLARIFY    │
+  │ Agency sets │ │ Auto-    │ │REQUIRED   │
+  │ timeline    │ │ escalate │ │           │
+  └──────┬──────┘ │ to head  │ └─────┬─────┘
+         │        └─────┬────┘       │
+         ▼              ▼            │
+  ┌─────────────┐ ┌──────────┐      │
+  │ IN PROGRESS │ │ESCALATED │◄─────┘
+  │ Updates due │ │ PS/CS    │
+  │ weekly or   │ │ notified │
+  │ biweekly    │ └─────┬────┘
+  └──────┬──────┘       │
+         │              │
+         ▼              ▼
+  ┌─────────────┐ ┌──────────────┐
+  │ FULFILLED   │ │   OVERDUE    │
+  │ (Agency     │ │ Public alert │
+  │  claims     │ │ → MCA notify │
+  │  done)      │ │ → Media feed │
+  └──────┬──────┘ └──────┬───────┘
+         │               │
+         ▼               ▼
+  ┌─────────────────┐ ┌────────────┐
+  │CITIZEN VERIFIES │ │  FAILED    │
+  │ 5 confirms =    │ │ Documented │
+  │   RESOLVED ✓    │ │ permanent  │
+  │ 5 disputes =    │ │ civic      │
+  │   back to       │ │ record     │
+  │   IN PROGRESS   │ └────────────┘
+  └─────────────────┘
+```
+
+---
+
+## Part II: The Complete Tech Stack
+
+### 2.1 Client Layer
+
+**Native Android Application.** Language: Kotlin 1.9+. UI framework: Jetpack Compose with Material 3. Minimum SDK: API 23 (Android 6.0). Target SDK: API 35 (Android 15). Architecture pattern: MVVM with Clean Architecture layers (Presentation → Domain → Data). Dependency injection: Hilt. Navigation: Compose Navigation with type-safe arguments. The APK target is under 15MB using Android App Bundle with on-demand feature modules (the map module loads post-install). Testing uses JUnit 5 for unit tests, Turbine for Flow testing, and Espresso for UI integration tests.
+
+**Local Storage.** Room 2.6+ provides the offline-first SQLite persistence layer. Room was chosen over raw SQLite for compile-time query verification, coroutine/Flow integration, and migration support. The database schema mirrors the server schema for incidents, commitments, alerts, and cached ward data, enabling full offline operation. DataStore (Preferences) handles user settings, anonymity mode, and cached SDUI layouts. WorkManager 2.9+ manages background sync with exponential backoff and network-type constraints. Coil handles image loading with automatic WebP transcoding, memory/disk caching, and placeholder generation.
+
+**Mapping.** MapLibre Native SDK for Android provides the map rendering, chosen over Google Maps for three reasons: offline tile caching with pre-loaded Nairobi metro tiles (~50MB covering the entire metro at zoom levels 10–16), zero API key costs at scale, and full customization of map styling (Jukwa's safety heatmap overlay requires custom layer rendering that Google Maps restricts). OpenStreetMap serves as the base tile source, with Kenya's exceptionally detailed OSM data (the Digital Matatus project mapped all 130+ matatu routes, Map Kibera produced one of the densest datasets globally). Turf.js handles client-side geospatial calculations (point-in-polygon for ward detection, distance calculations for proximity alerts).
+
+**Networking.** Ktor Client 2.3+ handles HTTP communication, chosen over Retrofit for multiplatform potential (shared networking code if iOS is ever pursued) and native coroutine support. Protocol Buffers (protobuf-lite) serialize real-time payloads at 30–50% smaller than JSON, critical on 3G connections. HiveMQ MQTT Client for Android maintains the persistent MQTT connection for real-time alerts. Firebase Cloud Messaging SDK handles push notification receipt and topic subscriptions.
+
+**Privacy Engine.** AndroidX ExifInterface strips JPEG metadata. A custom MP4 atom parser strips video metadata (moov/udta atoms containing GPS and device signatures). AndroidX Security Crypto provides EncryptedSharedPreferences for sensitive local data. NaCl (libsodium via Lazysodium-android) handles end-to-end encryption for Incognito Mode submissions before network transmission.
+
+**Progressive Web App.** Framework: Next.js 14 with App Router. Service worker: Workbox 7 for precaching and runtime caching strategies (CacheFirst for map tiles, NetworkFirst for API data, StaleWhileRevalidate for SDUI layouts). Map rendering: MapLibre GL JS. State management: Zustand (lightweight, no boilerplate). The PWA targets a sub-3MB initial payload with offline reporting capability via IndexedDB and Background Sync API.
+
+### 2.2 Gateway Layer
+
+**API Gateway.** NGINX 1.25+ with OpenResty (LuaJIT). Chosen over Kong (no African deployments found, heavy database dependency, enterprise pricing) and Traefik (slightly lower throughput). NGINX delivers approximately 33,591 requests per second on modest hardware with zero database dependency. OpenResty's Lua scripting handles JWT validation, rate limiting (sliding window per device token stored in shared memory), request routing to backend services, and response caching for public dashboard data. TLS 1.3 termination at the gateway with Let's Encrypt certificates auto-renewed via Certbot.
+
+**CDN.** Cloudflare (free tier for MVP, Pro at $20/month for WAF and image optimization). Cloudflare's Nairobi Point of Presence delivers 5–10ms median latency for cached assets: map tiles, ward boundary GeoJSON, SDUI layout JSON, PWA shell, and static media. Cloudflare Workers handle edge logic for USSD webhook validation and geographic request routing.
+
+**SMS/USSD Gateway.** Africa's Talking (AT). SDKs available in Python, Node.js, Java, PHP, Ruby, and Go. Supports all Kenyan carriers (Safaricom, Airtel, Telkom). USSD sessions cost approximately KSh 1 per session, SMS approximately KSh 0.50–0.80. AT provides the USSD session management, SMS send/receive, shortcode hosting, and airtime disbursement API (for gamification rewards). The AT Simulator enables local development and testing without live carrier integration.
+
+### 2.3 Application Services Layer
+
+**Runtime.** Node.js 20 LTS with TypeScript 5.3+. Chosen over Go (Dennis's existing JavaScript/TypeScript familiarity from Firebase/React work reduces learning curve) and Python (Node's event loop model handles the concurrent I/O patterns of a civic platform more efficiently than Python's threading model, and TypeScript's type safety prevents the class of bugs that plague large Python codebases). Framework: Fastify 4 (2× faster than Express, built-in JSON schema validation, native TypeScript support). Each microservice runs as a standalone Fastify application in its own Docker container.
+
+**Service Mesh.** For the MVP, direct service-to-service HTTP calls over the Docker internal network. At scale (Phase 4+), migration to a lightweight service mesh using Linkerd 2 (lower resource footprint than Istio, automatic mTLS, traffic observability).
+
+**AI Classification.** The rule-based classifier runs as a TypeScript module within the Incident Service and Commitment Service — no separate AI infrastructure needed for MVP. Rules map keyword patterns, location context, and category signals to the 40 incident categories and agency routing table. A lightweight ML validation layer uses ONNX Runtime (Node.js bindings) with a text classification model trained on Ushahidi's Kenyan deployment data (~200K labeled reports) and Mulika Uhalifu's 176K report corpus. The ML model flags disagreements with the rule engine for human review, progressively improving rules. No GPU required — ONNX inference runs on CPU at sub-100ms per classification.
+
+**Task Queue.** BullMQ on Redis handles asynchronous processing: media transcoding (sharp for images, FFmpeg for video), EXIF stripping (server-side defense-in-depth), notification fan-out, escalation timer management, and scheduled jobs (hourly scorecard refresh, daily traffic predictions, quarterly report generation). BullMQ's priority queues ensure emergency processing jumps the queue ahead of routine tasks.
+
+### 2.4 Messaging & Real-Time Layer
+
+**MQTT Broker.** MVP: Eclipse Mosquitto 2 (~200KB footprint, handles 50K concurrent connections on a $20/month VPS). Scale: EMQX 5 (100M+ connections in cluster, MQTT-over-QUIC for 0-RTT mobile reconnection, webhook integration). Topic hierarchy:
+
+```
+jukwa/alerts/{county}/{ward}/{category}
+jukwa/traffic/sensors/{junction_id}
+jukwa/traffic/alerts/{corridor}
+jukwa/incidents/{id}/status
+jukwa/emergency/{county}/dispatch
+jukwa/baraza/{ward_id}/commitments
+jukwa/baraza/{ward_id}/verifications
+jukwa/baraza/agencies/{agency_id}
+jukwa/civic/{ward}/polls
+```
+
+QoS levels: 0 for high-frequency sensor telemetry (individual message loss acceptable), 1 for citizen-facing alerts and commitment updates (at-least-once delivery guaranteed), 2 for emergency dispatch (exactly-once, no duplicates).
+
+**Push Notifications.** Firebase Cloud Messaging (FCM). Free, native Android integration, handles device wake from Doze mode. Used exclusively for notification delivery (title, category, location summary, incident/commitment ID). Full payload loads from MQTT session or REST API when the user opens the app. Topic subscriptions mirror MQTT hierarchy for server-side geographic targeting.
+
+### 2.5 Data & Storage Layer
+
+**Primary Datastore.** PostgreSQL 15 with PostGIS 3.3. Hosting: Supabase (managed PostgreSQL with PostGIS, built-in PostgREST for auto-generated REST APIs, real-time subscriptions via WebSocket, Row Level Security for fine-grained access control). Supabase was chosen over raw PostgreSQL for dramatically reduced backend code — PostgREST auto-generates CRUD endpoints for every table, and Supabase's real-time engine pushes database changes to connected clients without custom WebSocket code. Self-hosted alternative: PostgreSQL on Safaricom Cloud or iXAfrica for maximum data sovereignty.
+
+**Telemetry Datastore.** MongoDB 7 with time-series collections. Handles high-velocity IoT data from Samsung ITS sensors, Waze CCP feeds, and MQTT telemetry logs. Time-series collections provide automatic bucketing, compression, and efficient range queries. Hosting: MongoDB Atlas (Singapore or Mumbai region for MVP, migrating to local hosting when AWS Nairobi launches in late 2026).
+
+**Cache & Real-Time State.** Redis 7. Functions: API response caching (TTL-based), rate limiting counters (sliding window), session tokens, geospatial proximity queries (GEOADD/GEORADIUS for "nearest police station"), BullMQ job queue backend, and MQTT session state persistence.
+
+**Object Storage.** MinIO (self-hosted S3-compatible) for MVP. All citizen-uploaded media (photos, videos, audio recordings, baraza session recordings) is stored encrypted at rest (AES-256). Media goes through the scrubbing pipeline (EXIF removal, video transcoding to H.264 720p, thumbnail generation) before storage. Lifecycle policies auto-archive media older than 12 months to cold storage, auto-delete non-evidentiary media after 24 months.
+
+### 2.6 Privacy & Anonymity Layer
+
+**Citizen Vault Relay.** GlobaLeaks-based architecture hosted by civil society consortium on independent infrastructure. End-to-end encryption (NaCl/libsodium), no IP logging, ChaCha20-encrypted filesystem, optional Tor access via obfs4 bridges and Snowflake pluggable transports. Only activated for Incognito Mode submissions.
+
+**On-Device Privacy.** EXIF stripping via AndroidX ExifInterface + custom MP4 atom parser. GPS fuzzing to ward centroid (±500m random noise). Device token rotation every 72 hours in Incognito Mode via one-way hash chain. Local report encryption before any network transmission.
+
+### 2.7 External Integrations
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                  EXTERNAL API INTEGRATIONS               │
+│                                                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │ Safaricom    │  │ Africa's     │  │ eCitizen     │  │
+│  │ Daraja 3.0   │  │ Talking      │  │ OAuth 2.0    │  │
+│  │              │  │              │  │              │  │
+│  │ M-Pesa STK   │  │ USSD Gateway │  │ Identity     │  │
+│  │ Push, B2C,   │  │ SMS Send/    │  │ Verification │  │
+│  │ Lipa Na      │  │ Receive,     │  │ (Verified    │  │
+│  │ M-Pesa       │  │ Airtime      │  │  Mode only)  │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│                                                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │ Waze CCP     │  │ Samsung ITS  │  │ WhatsApp     │  │
+│  │              │  │              │  │ Business API │  │
+│  │ Bidirectional│  │ MQTT Sensor  │  │              │  │
+│  │ Traffic Data │  │ Feeds from   │  │ Chatbot NLP  │  │
+│  │ Exchange     │  │ 25 Junctions │  │ Channel      │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+│                                                          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │ NPSIMS       │  │ NTSA TIMS    │  │ jamiiimara   │  │
+│  │ Police API   │  │ Transport    │  │ .org API     │  │
+│  │ (Phase 2)    │  │ API          │  │ JIM Ticket   │  │
+│  │              │  │              │  │ Import       │  │
+│  └──────────────┘  └──────────────┘  └──────────────┘  │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 2.8 Infrastructure & DevOps
+
+**Containerization.** Docker with Docker Compose for MVP. Migration to K3s (lightweight Kubernetes) at scale. Each microservice has its own Dockerfile, health check endpoint, and graceful shutdown handler.
+
+**CI/CD.** GitHub Actions. Pipeline: lint (ESLint + ktlint) → unit tests → build Docker images → push to container registry → deploy to staging → integration tests → deploy to production (manual approval gate). Android builds use Gradle with GitHub-hosted runners, producing signed AAB files for Play Store deployment.
+
+**Monitoring.** Grafana + Prometheus for infrastructure metrics (CPU, memory, network, database connections). Loki for centralized log aggregation. Uptime Kuma for endpoint health monitoring (self-hosted, free). Sentry for client-side error tracking (Android and PWA). Custom Grafana dashboards for civic metrics (reports per hour, average response time, active MQTT connections, sync queue depth).
+
+**Hosting.** Primary: Kenyan data center (Safaricom Cloud or iXAfrica/Digital Realty) for DPA compliance. CDN: Cloudflare with Kenya PoPs. DNS: Cloudflare DNS. SSL: Let's Encrypt via Certbot with auto-renewal. Domain: jukwa.ke (or jukwa.co.ke).
 
 ---
 
