@@ -6,28 +6,28 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import ke.jukwa.data.repository.IncidentRepository
 
 @HiltWorker
 class IncidentSyncWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val repository: IncidentRepository,
+    private val networkAwareSyncStrategy: NetworkAwareSyncStrategy,
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
+        val decision = networkAwareSyncStrategy.getSyncDecision(networkAwareSyncStrategy.detectNetworkType())
+
+        if (decision == SyncDecision.QUEUE_LOCALLY) {
+            return Result.failure()
+        }
+
         return try {
-            val unsynced = repository.getUnsyncedIncidents()
-            var allSucceeded = true
-
-            for (incident in unsynced) {
-                val result = repository.syncIncidentToServer(incident)
-                if (result.isFailure) {
-                    allSucceeded = false
-                }
+            networkAwareSyncStrategy.executeSync()
+            when (networkAwareSyncStrategy.syncStatus.value) {
+                NetworkAwareSyncStrategy.SyncStatus.SYNCED -> Result.success()
+                NetworkAwareSyncStrategy.SyncStatus.ERROR -> Result.retry()
+                else -> Result.retry()
             }
-
-            if (allSucceeded) Result.success() else Result.retry()
         } catch (e: Exception) {
             Result.retry()
         }

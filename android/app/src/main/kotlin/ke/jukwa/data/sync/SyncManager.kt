@@ -14,7 +14,13 @@ import javax.inject.Singleton
 @Singleton
 class SyncManager @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val networkAwareSyncStrategy: NetworkAwareSyncStrategy,
 ) {
+    fun start() {
+        networkAwareSyncStrategy.registerNetworkCallback()
+        schedulePeriodicSync()
+    }
+
     fun schedulePeriodicSync() {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)

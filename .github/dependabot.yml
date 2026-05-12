@@ -13,6 +13,90 @@ updates:
       interval: "weekly"
     labels: ["dependencies", "docker"]
 
+  - package-ecosystem: "npm"
+    directory: "/services/commitment"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  - package-ecosystem: "docker"
+    directory: "/services/commitment"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+
+  - package-ecosystem: "npm"
+    directory: "/services/traffic"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  - package-ecosystem: "docker"
+    directory: "/services/traffic"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+
+  - package-ecosystem: "npm"
+    directory: "/services/emergency"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  - package-ecosystem: "docker"
+    directory: "/services/emergency"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+
+  - package-ecosystem: "npm"
+    directory: "/services/identity"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  - package-ecosystem: "docker"
+    directory: "/services/identity"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+
+  - package-ecosystem: "npm"
+    directory: "/services/notification"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  - package-ecosystem: "docker"
+    directory: "/services/notification"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+
+  - package-ecosystem: "npm"
+    directory: "/services/ai-agent"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "backend"]
+
+  - package-ecosystem: "docker"
+    directory: "/services/ai-agent"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+
+  - package-ecosystem: "docker"
+    directory: "/services/citizen-vault"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies", "docker"]
+
   - package-ecosystem: "docker"
     directory: "/infra"
     schedule:
