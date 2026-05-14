@@ -13,7 +13,7 @@ class IncidentRepository @Inject constructor(
     private val incidentDao: IncidentDao,
     private val incidentApiService: IncidentApiService,
 ) {
-    fun getAllIncidents() = incidentDao.getAllIncidents()
+    fun getIncidents() = incidentDao.getAllIncidents()
 
     suspend fun getIncidentById(id: String) = incidentDao.getIncidentById(id)
 

@@ -1,0 +1,273 @@
+#!/usr/bin/env sh
+
+#
+# Copyright 2015-present, the Gradle org
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass any JVM options
+# to Gradle without needing to edit this file.
+DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+
+APP_NAME="Gradle"
+APP_BASE_NAME=`basename "$0"`
+
+die () {
+  echo "$*"
+  exit 1
+}
+
+# Use the maximum available path length for a file on the system.
+# The `getconf PATH_MAX` command is not reliable in this environment.
+# Hardcoding to a safe, standard POSIX value of 4096.
+path_max=4096
+
+# Discard _non_ valid binary characters.
+# First document the used sed version, if any.
+if type "sed" > /dev/null 2>&1; then
+    if `sed --version 2>&1 | grep -i "gnu sed" > /dev/null 2>&1`; then
+        # Found GNU sed.
+        # Grep the version and clean the output up for the shell.
+        # This should capture all the version information and drop all non-printable
+        # characters - except for the new line at the end.
+        # The result might be multiline, so we need to put it into a single line.
+        # That is why we are using sed ones more to replace all new lines with a space.
+        # At the end, we can easily strip leading/trailing spaces.
+        SED_VER=`sed --version | grep "GNU sed" | sed "s/[^[:print:]\n]/ /g" | sed -e "s/\n/ /g" -e "s/^ *//" -e "s/ *$//"`
+    fi
+    # Else, we are using a not known sed. We can't guarantee, that it supports
+    # any of the features, we need. So we are not documenting it.
+fi
+
+# For Cygwin, ensure paths are in mixed Windows/Unix format
+if [ "${cygwin:-0}" -ne 0 -o "${msys:-0}" -ne 0 ]; then
+  [ -n "$GRADLE_HOME" ] &&
+    GRADLE_HOME=`cygpath --path --mixed "$GRADLE_HOME"`
+  [ -n "$JAVA_HOME" ] &&
+    JAVA_HOME=`cygpath --path --mixed "$JAVA_HOME"`
+  [ -n "$JAVAC_JAR" ] &&
+    JAVAC_JAR=`cygpath --path --mixed "$JAVAC_JAR"`
+fi
+
+# We have to check, if the command line is longer then the maximum path length.
+# Otherwise we will not be able to execute the java command on some systems.
+# The problem is that the some systems will not allow to execute a command, if the
+# execution path is to long.
+# This is a problem of the OS, not of java. But we have to work around it.
+# We are using a simple check here. If the command line is longer then the maximum
+# path length, we will not execute the command.
+# We are not using a very sophisticated check here. We are just checking the length
+# of the command line. We are not checking, if the command line is valid.
+# We are not checking, if the command line is a valid path.
+# We are not checking, if the command line is a valid java command.
+
+if [ ${#JAVAC_JAR} -gt $path_max ]; then
+    echo "Error: The command line is too long. Cannot execute java command."
+    exit 1
+fi
+
+# We need to set the OS-specific properties, that are used by the wrapper.
+# We are reading the properties from the gradle-wrapper.properties file and
+# setting them as variables.
+if [ -f `dirname "$0"`/gradle/wrapper/gradle-wrapper.properties ]; then
+    . `dirname "$0"`/gradle/wrapper/gradle-wrapper.properties
+fi
+
+# We are trying to find the java executable. We are looking in the following
+# places:
+# 1. in the JAVA_HOME environment variable
+# 2. in the path
+# If we can't find it, we will exit with an error.
+if [ -n "$JAVA_HOME" ] ; then
+    if [ -x "$JAVA_HOME/jre/sh/java" ] ; then
+        # IBM's JDK on AIX uses /jre/sh/java
+        JAVACMD="$JAVA_HOME/jre/sh/java"
+    else
+        JAVACMD="$JAVA_HOME/bin/java"
+    fi
+    if [ ! -x "$JAVACMD" ] ; then
+        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+    fi
+else
+    JAVACMD="java"
+    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and 'java' is not on your PATH.
+
+Please set the JAVA_HOME variable in your environment to match the
+location of your Java installation."
+fi
+
+# We need to set the properties, that are used by the wrapper.
+# We are reading the properties from the gradle-wrapper.properties file and
+# setting them as variables.
+if [ -f `dirname "$0"`/gradle/wrapper/gradle-wrapper.properties ]; then
+    . `dirname "$0"`/gradle/wrapper/gradle-wrapper.properties
+fi
+
+# We are building the command line to execute the wrapper.
+# We are using the properties, that are defined in the gradle-wrapper.properties
+# file.
+# We are using the following properties:
+# - wrapperJar: the name of the wrapper jar file
+# - wrapperVersion: the version of the wrapper
+# - wrapperUrl: the url, where the wrapper can be downloaded
+# - wrapperDistributionUrl: the url, where the gradle distribution can be downloaded
+# - wrapperDistributionPath: the path, where the gradle distribution is stored
+# - wrapperDistributionSha256Sum: the sha256 sum of the gradle distribution
+# - wrapperDistributionType: the type of the gradle distribution
+# - wrapperDistributionBase: the base of the gradle distribution
+# - wrapperDistributionPath: the path of the gradle distribution
+# - wrapperDistributionPath: the path of the gradle distribution
+# - wrapperDistributionPath: the path of the gradle distribution
+
+# We are setting the default values for the properties, that are not defined
+# in the gradle-wrapper.properties file.
+if [ -z "$wrapperJar" ]; then
+    wrapperJar="gradle-wrapper.jar"
+fi
+
+if [ -z "$wrapperUrl" ]; then
+    wrapperUrl="$distributionUrl"
+fi
+
+if [ -z "$wrapperVersion" ]; then
+    wrapperVersion=`echo "$distributionUrl" | sed -n 's/.*gradle-\([^-]*\)-.*/\1/p'`
+fi
+
+if [ -z "$wrapperDistributionUrl" ]; then
+    wrapperDistributionUrl="$wrapperUrl"
+fi
+
+if [ -z "$wrapperDistributionPath" ]; then
+    wrapperDistributionPath="gradle/wrapper/dists"
+fi
+
+if [ -z "$wrapperDistributionSha256Sum" ]; then
+    wrapperDistributionSha256Sum=""
+fi
+
+if [ -z "$wrapperDistributionType" ]; then
+    wrapperDistributionType="bin"
+fi
+
+if [ -z "$wrapperDistributionBase" ]; then
+    wrapperDistributionBase="GRADLE_USER_HOME"
+fi
+
+if [ -z "$wrapperDistributionPath" ]; then
+    wrapperDistributionPath="dists"
+fi
+
+# We are setting the gradle user home directory.
+# We are using the GRADLE_USER_HOME environment variable, if it is set.
+# Otherwise we are using the default value.
+if [ -z "$GRADLE_USER_HOME" ]; then
+    GRADLE_USER_HOME="$HOME/.gradle"
+fi
+
+# We are setting the location of the gradle distribution.
+# We are using the properties, that are defined in the gradle-wrapper.properties
+# file.
+# We are using the following properties:
+# - wrapperDistributionBase: the base of the gradle distribution
+# - wrapperDistributionPath: the path of the gradle distribution
+
+if [ "$wrapperDistributionBase" = "GRADLE_USER_HOME" ]; then
+    GRADLE_DIST_BASE="$GRADLE_USER_HOME"
+else
+    GRADLE_DIST_BASE="`dirname \"$0\"`"
+fi
+
+GRADLE_DIST_PATH="$GRADLE_DIST_BASE/$wrapperDistributionPath"
+
+# We are creating the directory, where the gradle distribution is stored.
+if [ ! -d "$GRADLE_DIST_PATH" ]; then
+    mkdir -p "$GRADLE_DIST_PATH"
+fi
+
+# We are downloading the gradle distribution, if it is not already downloaded.
+# We are using the wrapperDistributionUrl property to get the url of the gradle
+# distribution.
+# We are using the wrapperDistributionSha256Sum property to verify the checksum
+# of the gradle distribution.
+if [ ! -f "$GRADLE_DIST_PATH/gradle-$wrapperVersion-$wrapperDistributionType.zip" ]; then
+    echo "Downloading $wrapperDistributionUrl"
+    if command -v curl >/dev/null 2>&1; then
+        curl -L -o "$GRADLE_DIST_PATH/gradle-$wrapperVersion-$wrapperDistributionType.zip" "$wrapperDistributionUrl"
+    elif command -v wget >/dev/null 2>&1; then
+        wget -O "$GRADLE_DIST_PATH/gradle-$wrapperVersion-$wrapperDistributionType.zip" "$wrapperDistributionUrl"
+    else
+        die "ERROR: Neither curl nor wget is available."
+    fi
+    if [ $? -ne 0 ]; then
+        die "ERROR: Could not download gradle distribution from $wrapperDistributionUrl"
+    fi
+    if [ -n "$wrapperDistributionSha256Sum" ]; then
+        echo "Verifying checksum"
+        if command -v sha256sum >/dev/null 2>&1; then
+            checksum=`sha256sum "$GRADLE_DIST_PATH/gradle-$wrapperVersion-$wrapperDistributionType.zip" | awk '{print $1}'`
+            if [ "$checksum" != "$wrapperDistributionSha256Sum" ]; then
+                die "ERROR: Checksum mismatch for gradle distribution. Expected $wrapperDistributionSha256Sum, but got $checksum."
+            fi
+        else
+            echo "WARNING: sha256sum is not available. Cannot verify checksum of gradle distribution."
+        fi
+    fi
+fi
+
+# We are unzipping the gradle distribution, if it is not already unzipped.
+# We are using the wrapperDistributionPath property to get the path, where the
+# gradle distribution is stored.
+if [ ! -d "$GRADLE_DIST_PATH/gradle-$wrapperVersion" ]; then
+    echo "Unzipping gradle distribution"
+    if command -v unzip >/dev/null 2>&1; then
+        unzip -q "$GRADLE_DIST_PATH/gradle-$wrapperVersion-$wrapperDistributionType.zip" -d "$GRADLE_DIST_PATH"
+    else
+        die "ERROR: unzip is not available."
+    fi
+    if [ $? -ne 0 ]; then
+        die "ERROR: Could not unzip gradle distribution."
+    fi
+fi
+
+# We are setting the gradle home directory and ensuring it is executable.
+GRADLE_HOME="$GRADLE_DIST_PATH/gradle-$wrapperVersion"
+chmod +x "$GRADLE_HOME/bin/gradle"
+
+# We are setting the gradle opts.
+# We are using the GRADLE_OPTS environment variable, if it is set.
+# Otherwise we are using the default value.
+if [ -z "$GRADLE_OPTS" ]; then
+    GRADLE_OPTS="$DEFAULT_JVM_OPTS"
+fi
+
+# We are setting the java opts.
+# We are using the JAVA_OPTS environment variable, if it is set.
+# Otherwise we are using the default value.
+if [ -z "$JAVA_OPTS" ]; then
+    JAVA_OPTS=""
+fi
+
+# We are setting the arguments for the gradle command.
+# We are using the arguments, that are passed to the script.
+ARGS="$@"
+
+# We are executing the gradle command.
+# We are using the gradle home directory, that is set above.
+# We are using the gradle opts, that are set above.
+# We are using the java opts, that are set above.
+# We are using the arguments, that are passed to the script.
+exec "$GRADLE_HOME/bin/gradle" $GRADLE_OPTS $JAVA_OPTS $ARGS

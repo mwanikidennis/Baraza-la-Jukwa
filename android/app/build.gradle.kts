@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
 }
@@ -11,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "ke.jukwa"
-        minSdk = 23
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
@@ -47,7 +48,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.8"
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     packaging {
@@ -59,7 +60,7 @@ android {
 
 dependencies {
     // Compose BOM (single version for all Compose libraries)
-    val composeBom = platform("androidx.compose:compose-bom:2024.01.00")
+    val composeBom = platform("androidx.compose:compose-bom:2024.05.00")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
@@ -92,20 +93,20 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
 
     // Ktor Client (Networking)
-    implementation("io.ktor:ktor-client-core:2.3.7")
-    implementation("io.ktor:ktor-client-android:2.3.7")
-    implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
-    implementation("io.ktor:ktor-client-logging:2.3.7")
+    implementation("io.ktor:ktor-client-core:3.0.0-beta-1")
+    implementation("io.ktor:ktor-client-android:3.0.0-beta-1")
+    implementation("io.ktor:ktor-client-content-negotiation:3.0.0-beta-1")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.0-beta-1")
+    implementation("io.ktor:ktor-client-logging:3.0.0-beta-1")
 
     // Kotlinx Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.0")
 
     // Coil (Image loading)
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     // MapLibre Native SDK
-    implementation("org.maplibre.gl:android-sdk:10.2.0")
+    implementation("org.maplibre.gl:android-sdk:11.0.0")
 
     // WorkManager (Background sync)
     implementation("androidx.work:work-runtime-ktx:2.9.0")
@@ -118,6 +119,9 @@ dependencies {
     // Firebase Cloud Messaging
     implementation("com.google.firebase:firebase-messaging-ktx:23.4.0")
 
+    // Google Play Services (Location)
+    implementation("com.google.android.gms:play-services-location:21.1.0")
+
     // HiveMQ MQTT Client
     implementation("com.hivemq:hivemq-mqtt-client:1.3.1")
 
@@ -127,12 +131,14 @@ dependencies {
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
 
     // Testing
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.1")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation("app.cash.turbine:turbine:1.0.0")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")

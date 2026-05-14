@@ -15,9 +15,7 @@ enum class DeviceTier {
 class DeviceTierManager @Inject constructor(
     private val context: Context
 ) {
-    private val tier: DeviceTier by lazy { detectTier() }
-
-    fun getTier(): DeviceTier = tier
+    val tier: DeviceTier by lazy { detectTier() }
 
     private fun detectTier(): DeviceTier {
         val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager

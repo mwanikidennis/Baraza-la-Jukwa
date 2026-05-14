@@ -15,6 +15,6 @@ class MyReportsViewModel @Inject constructor(
     repository: IncidentRepository,
 ) : ViewModel() {
 
-    val incidents: StateFlow<List<IncidentEntity>> = repository.getAllIncidents()
+    val incidents: StateFlow<List<IncidentEntity>> = repository.getIncidents()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 }

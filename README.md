@@ -7,7 +7,7 @@ Kenya's unified citizen engagement platform.
 
 ## Architecture
 
-- **Android App**: Kotlin, Jetpack Compose, Room (offline-first)
+- **Android App**: Kotlin 2.0.0, Jetpack Compose, Room (offline-first), Hilt, MapLibre. Built with Android Gradle Plugin 8.4.0.
 - **Backend Services**: Node.js, Fastify, TypeScript
 - **Database**: PostgreSQL with PostGIS
 - **Real-Time**: MQTT via Mosquitto, Firebase Cloud Messaging

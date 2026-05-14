@@ -15,10 +15,4 @@ class Converters {
 
     @TypeConverter
     fun toStringList(value: String?): List<String>? = value?.split(",")?.filter { it.isNotEmpty() }
-
-    @TypeConverter
-    fun fromAnonymityMode(mode: String?): String? = mode
-
-    @TypeConverter
-    fun toAnonymityMode(value: String?): String? = value
 }

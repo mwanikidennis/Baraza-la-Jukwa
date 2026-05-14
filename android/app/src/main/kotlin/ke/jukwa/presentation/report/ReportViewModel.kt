@@ -4,24 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import ke.jukwa.domain.incident.SubmitIncidentUseCase
-import ke.jukwa.data.local.entity.IncidentEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-data class ReportUiState(
-    val category: String = "",
-    val description: String = "",
-    val severity: Int = 2,
-    val anonymityMode: String = "STANDARD",
-    val latitude: Double = -1.286389,
-    val longitude: Double = 36.817223,
-    val isSubmitting: Boolean = false,
-    val isSubmitted: Boolean = false,
-    val error: String? = null,
-)
 
 @HiltViewModel
 class ReportViewModel @Inject constructor(
