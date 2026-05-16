@@ -1,0 +1,49 @@
+# Development Profiles Override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Enables development conveniences: debug ports, local database, detailed logging
+
+version: '3.9'
+
+services:
+  postgres:
+    profiles: ["local-db"]  # Enable with: --profile local-db
+    environment:
+      POSTGRES_INITDB_ARGS: "-c log_statement=all"
+
+  # Dozzle always available in dev profile
+  logs-dashboard:
+    profiles: [""] # Default profile, always on
+
+  # Expose all service ports for development
+  commitment-service:
+    ports:
+      - "3002:3002"
+
+  emergency-service:
+    ports:
+      - "3004:3004"
+
+  notification-service:
+    ports:
+      - "3007:3007"
+
+  identity-service:
+    ports:
+      - "3006:3006"
+
+  traffic-service:
+    ports:
+      - "3003:3003"
+
+  ai-agent-service:
+    ports:
+      - "3010:3010"
+
+  citizen-vault-service:
+    ports:
+      - "3011:3011"
+
+  tor:
+    ports:
+      - "9050:9050"

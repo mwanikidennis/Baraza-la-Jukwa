@@ -1,5 +1,3 @@
-version: '3.8'
-
 # =============================================================================
 # JUKWA Hybrid Infrastructure
 #
@@ -318,6 +316,23 @@ services:
     networks:
       - jukwa_net
 
+  # ===========================================================================
+  # MONITORING & SIMULATION TIER
+  # ===========================================================================
+
+  # Dozzle: Real-time log viewer for all containers (Browser Interface)
+  # Access at http://localhost:8888
+  logs-dashboard:
+    image: amir20/dozzle:latest
+    container_name: jukwa-logs-dashboard
+    ports:
+      - "8888:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - jukwa_net
+
 networks:
   jukwa_net:
     driver: bridge
@@ -329,3 +344,4 @@ volumes:
   mosquitto_log:
   minio_data:
   mongodb_data:
+  citizen-vault-backups:

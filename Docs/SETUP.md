@@ -103,11 +103,43 @@ When you scaffold `services/<name>/`:
 5. **Dependabot** ([`.github/dependabot.yml`](../.github/dependabot.yml)): add `npm` and `docker` blocks for `/services/<name>`.
 6. **CODEOWNERS** ([`.github/CODEOWNERS`](../.github/CODEOWNERS)): add an owner line if it differs from the default.
 
-## 6. Troubleshooting
+## 6. Android Development & Testing
+
+Jukwa features a native Android app in the `android/` directory.
+
+### Run Unit Tests (Windows/MINGW64)
+A specialized script is provided to handle toolchain stabilization (JDK 17) and Windows path quirks.
+
+```bash
+cd android
+./run_tests.sh
+```
+
+- **JDK 17**: The script automatically locates or sets up JDK 17.
+- **Reports**: HTML test reports are generated at `android/app/build/reports/tests/testDebugUnitTest/index.html`.
+
+### Local Simulation
+1. Open the project in **Android Studio**.
+2. Select the **'app'** configuration.
+3. Launch your AVD (Emulator) and click **Run**.
+
+---
+
+## 7. Monitoring Dashboard
+
+A real-time log viewer is included in the infrastructure stack for easy debugging.
+
+- **Dozzle Dashboard**: [http://localhost:8888](http://localhost:8888)
+- **Use Case**: View real-time logs from all backend services simultaneously in your browser.
+
+---
+
+## 8. Troubleshooting
 
 | Symptom | Fix |
 | --- | --- |
 | `docker: command not found` | Docker Desktop not installed or not on PATH. Install + reboot. |
+| `Docker Desktop is unable to start` | Manually launch Docker Desktop from the Start menu and wait for the green "Engine Running" status. |
 | `incident-service` unhealthy | `docker logs jukwa-incident-service` — usually a missing env var or DB not yet ready. |
 | Port 5432/6379/1883 already in use | Stop the local Postgres/Redis/Mosquitto, or change the host port mapping in `infra/docker-compose.yml`. |
-| `compose-smoke` CI job fails on healthcheck | Check the job logs for the failed container's `docker logs` output (last step). |
+| `run_tests.sh` finds wrong Java | Ensure `JAVA_HOME` is not manually set to an incompatible version in your terminal session before running. |
