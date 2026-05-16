@@ -80,8 +80,8 @@ fi
 # We need to set the OS-specific properties, that are used by the wrapper.
 # We are reading the properties from the gradle-wrapper.properties file and
 # setting them as variables.
-if [ -f `dirname "$0"`/gradle/wrapper/gradle-wrapper.properties ]; then
-    . `dirname "$0"`/gradle/wrapper/gradle-wrapper.properties
+if [ -f "$(dirname "$0")"/gradle/wrapper/gradle-wrapper.properties ]; then
+    . "$(dirname "$0")"/gradle/wrapper/gradle-wrapper.properties
 fi
 
 # We are trying to find the java executable. We are looking in the following
@@ -113,8 +113,8 @@ fi
 # We need to set the properties, that are used by the wrapper.
 # We are reading the properties from the gradle-wrapper.properties file and
 # setting them as variables.
-if [ -f `dirname "$0"`/gradle/wrapper/gradle-wrapper.properties ]; then
-    . `dirname "$0"`/gradle/wrapper/gradle-wrapper.properties
+if [ -f "$(dirname "$0")"/gradle/wrapper/gradle-wrapper.properties ]; then
+    . "$(dirname "$0")"/gradle/wrapper/gradle-wrapper.properties
 fi
 
 # We are building the command line to execute the wrapper.
@@ -188,7 +188,7 @@ fi
 if [ "$wrapperDistributionBase" = "GRADLE_USER_HOME" ]; then
     GRADLE_DIST_BASE="$GRADLE_USER_HOME"
 else
-    GRADLE_DIST_BASE="`dirname \"$0\"`"
+    GRADLE_DIST_BASE="$(dirname "$0")"
 fi
 
 GRADLE_DIST_PATH="$GRADLE_DIST_BASE/$wrapperDistributionPath"
