@@ -23,6 +23,6 @@
     "@types/pg": "^8.20.0",
     "@types/mongodb": "^4.0.7",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^6.0.3"
   }
 }
