@@ -40,11 +40,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import ke.jukwa.ui.theme.DeepGreen
 import ke.jukwa.ui.theme.EmergencyRed
 import ke.jukwa.ui.theme.Green700
+import ke.jukwa.ui.theme.JukwaTheme
 
 private val INCIDENT_CATEGORIES = listOf(
     "Robbery" to "robbery",
@@ -66,7 +67,6 @@ private val INCIDENT_CATEGORIES = listOf(
     "Other" to "other",
 )
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ReportScreen(
     onNavigateBack: () -> Unit = {},
@@ -87,6 +87,30 @@ fun ReportScreen(
         }
     }
 
+    ReportScreenContent(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onNavigateBack = onNavigateBack,
+        onUpdateCategory = { viewModel.updateCategory(it) },
+        onUpdateSeverity = { viewModel.updateSeverity(it) },
+        onUpdateDescription = { viewModel.updateDescription(it) },
+        onSubmitReport = { viewModel.submitReport() },
+        onResetState = { viewModel.resetState() }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun ReportScreenContent(
+    uiState: ReportUiState,
+    snackbarHostState: SnackbarHostState,
+    onNavigateBack: () -> Unit = {},
+    onUpdateCategory: (String) -> Unit = {},
+    onUpdateSeverity: (Int) -> Unit = {},
+    onUpdateDescription: (String) -> Unit = {},
+    onSubmitReport: () -> Unit = {},
+    onResetState: () -> Unit = {},
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -121,9 +145,7 @@ fun ReportScreen(
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = {
-                            viewModel.resetState()
-                        },
+                        onClick = onResetState,
                         colors = ButtonDefaults.buttonColors(containerColor = Green700)
                     ) {
                         Text("Report Another")
@@ -160,7 +182,7 @@ fun ReportScreen(
                     INCIDENT_CATEGORIES.forEach { (label, value) ->
                         FilterChip(
                             selected = uiState.category == value,
-                            onClick = { viewModel.updateCategory(value) },
+                            onClick = { onUpdateCategory(value) },
                             label = { Text(label, style = MaterialTheme.typography.bodySmall) }
                         )
                     }
@@ -173,7 +195,7 @@ fun ReportScreen(
                 )
                 Slider(
                     value = uiState.severity.toFloat(),
-                    onValueChange = { viewModel.updateSeverity(it.toInt()) },
+                    onValueChange = { onUpdateSeverity(it.toInt()) },
                     valueRange = 1f..5f,
                     steps = 3,
                     colors = androidx.compose.material3.SliderDefaults.colors(
@@ -187,7 +209,7 @@ fun ReportScreen(
                     value = descriptionText,
                     onValueChange = {
                         descriptionText = it
-                        viewModel.updateDescription(it.text)
+                        onUpdateDescription(it.text)
                     },
                     label = { Text("Description") },
                     placeholder = { Text("Describe what happened...") },
@@ -203,7 +225,7 @@ fun ReportScreen(
                 )
 
                 Button(
-                    onClick = { viewModel.submitReport() },
+                    onClick = onSubmitReport,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isSubmitting && uiState.category.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(containerColor = Green700)
@@ -221,5 +243,20 @@ fun ReportScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ReportScreenPreview() {
+    JukwaTheme {
+        ReportScreenContent(
+            uiState = ReportUiState(
+                category = "robbery",
+                severity = 4,
+                description = "Suspicious activity near the gate."
+            ),
+            snackbarHostState = remember { SnackbarHostState() }
+        )
     }
 }

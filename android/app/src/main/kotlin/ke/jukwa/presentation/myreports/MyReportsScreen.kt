@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ke.jukwa.data.local.entity.IncidentEntity
@@ -36,8 +37,8 @@ import ke.jukwa.ui.theme.Amber
 import ke.jukwa.ui.theme.EmergencyRed
 import ke.jukwa.ui.theme.Green700
 import ke.jukwa.ui.theme.Gray600
+import ke.jukwa.ui.theme.JukwaTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyReportsScreen(
     onNavigateBack: () -> Unit = {},
@@ -45,6 +46,18 @@ fun MyReportsScreen(
 ) {
     val incidents by viewModel.incidents.collectAsState()
 
+    MyReportsScreenContent(
+        incidents = incidents,
+        onNavigateBack = onNavigateBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MyReportsScreenContent(
+    incidents: List<IncidentEntity>,
+    onNavigateBack: () -> Unit = {}
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -157,5 +170,38 @@ private fun IncidentCard(incident: IncidentEntity) {
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MyReportsScreenPreview() {
+    JukwaTheme {
+        MyReportsScreenContent(
+            incidents = listOf(
+                IncidentEntity(
+                    incidentId = "1",
+                    incidentCategory = "robbery",
+                    description = "Happened at the corner of 5th and 10th.",
+                    latitude = -1.286389,
+                    longitude = 36.817223,
+                    severityScore = 4,
+                    status = "SUBMITTED",
+                    isSynced = true,
+                    timestamp = System.currentTimeMillis()
+                ),
+                IncidentEntity(
+                    incidentId = "2",
+                    incidentCategory = "pothole",
+                    description = "Large pothole in the middle of the road.",
+                    latitude = -1.286389,
+                    longitude = 36.817223,
+                    severityScore = 2,
+                    status = "QUEUED_FOR_SYNC",
+                    isSynced = false,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+        )
     }
 }

@@ -6,7 +6,6 @@ import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -33,15 +33,14 @@ import ke.jukwa.core.util.DeviceTierManager
 import ke.jukwa.data.local.entity.IncidentEntity
 import ke.jukwa.presentation.home.MapViewModel
 import ke.jukwa.ui.theme.Amber
-import ke.jukwa.ui.theme.DeepGreen
 import ke.jukwa.ui.theme.Green700
+import ke.jukwa.ui.theme.JukwaTheme
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapView
-import org.maplibre.android.maps.Style
 
 @Composable
 fun HomeScreen(
@@ -87,6 +86,27 @@ fun HomeScreen(
         }
     }
 
+    HomeScreenContent(
+        deviceTier = deviceTier,
+        location = location,
+        incidents = incidents,
+        onNavigateToReport = onNavigateToReport,
+        onNavigateToMyReports = onNavigateToMyReports,
+        onNavigateToBaraza = onNavigateToBaraza,
+        onNavigateToSettings = onNavigateToSettings
+    )
+}
+
+@Composable
+fun HomeScreenContent(
+    deviceTier: DeviceTier,
+    location: LocationResult?,
+    incidents: List<IncidentEntity>,
+    onNavigateToReport: () -> Unit = {},
+    onNavigateToMyReports: () -> Unit = {},
+    onNavigateToBaraza: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
+) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -141,6 +161,22 @@ enum class HomeTab {
 
 @Composable
 private fun MapLayer(tier: DeviceTier, location: LocationResult?, incidents: List<IncidentEntity>) {
+    val context = LocalContext.current
+    val isPreview = androidx.compose.ui.platform.LocalInspectionMode.current
+
+    if (isPreview) {
+        // Simple placeholder for Preview mode to avoid MapLibre initialization issues
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.LightGray),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("Map Preview (MapLibre)", color = Color.DarkGray)
+        }
+        return
+    }
+
     val mapView = rememberMapViewWithLifecycle()
     
     AndroidView(
@@ -347,6 +383,18 @@ private fun HomeBottomNav(
                 unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                 indicatorColor = Green700.copy(alpha = 0.12f)
             )
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+    JukwaTheme {
+        HomeScreenContent(
+            deviceTier = DeviceTier.HIGH,
+            location = null,
+            incidents = emptyList()
         )
     }
 }
