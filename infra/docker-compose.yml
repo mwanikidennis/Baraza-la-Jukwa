@@ -1,10 +1,14 @@
 # =============================================================================
-# JUKWA Hybrid Infrastructure
+# JUKWA Hybrid Infrastructure with Explicit Volume Prefixes
 #
 # DATABASE TIER:
 #   Production: Supabase (PostgreSQL + PostGIS) -- cloud, managed, RLS
 #   Development: Local Docker PostgreSQL -- for offline dev, same schema
 #   Set DATABASE_MODE=local to use this PostgreSQL instead of Supabase
+#
+# VOLUME NAMING (Multi-Project Safe):
+#   All volumes prefixed with "jukwa_" to avoid collisions with other projects
+#   in D:\Github Local\<other_project>
 #
 # NOT REPLACED BY SUPABASE:
 #   - MongoDB: Time-series telemetry (traffic sensors) -- high-write, schema-flexible
@@ -28,7 +32,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - jukwa_postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-jukwaa} -d ${DB_NAME:-jukwaa}"]
@@ -46,7 +50,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - jukwa_redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -64,8 +68,8 @@ services:
       - "9001:9001"
     volumes:
       - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - mosquitto_data:/mosquitto/data
-      - mosquitto_log:/mosquitto/log
+      - jukwa_mosquitto_data:/mosquitto/data
+      - jukwa_mosquitto_log:/mosquitto/log
     healthcheck:
       test: ["CMD-SHELL", "mosquitto_sub -h localhost -t '$$SYS/#' -C 1 -W 3 || exit 1"]
       interval: 15s
@@ -85,7 +89,7 @@ services:
       - "9000:9000"
       - "9090:9090"
     volumes:
-      - minio_data:/data
+      - jukwa_minio_data:/data
     command: server /data --console-address ":9090"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -102,7 +106,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - jukwa_mongodb_data:/data/db
       - ./mongodb/init-timeseries.js:/docker-entrypoint-initdb.d/init-timeseries.js:ro
     restart: unless-stopped
     networks:
@@ -125,7 +129,7 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3001
       - DATABASE_MODE=${DATABASE_MODE:-supabase}
-      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:[REDACTED]@postgres:5432/jukwaa}
       - SUPABASE_URL=${SUPABASE_URL:-}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - REDIS_URL=redis://redis:6379
@@ -156,7 +160,7 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3002
       - DATABASE_MODE=${DATABASE_MODE:-supabase}
-      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:[REDACTED]@postgres:5432/jukwaa}
       - SUPABASE_URL=${SUPABASE_URL:-}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - MQTT_URL=mqtt://mosquitto:1883
@@ -177,7 +181,7 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3004
       - DATABASE_MODE=${DATABASE_MODE:-supabase}
-      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:[REDACTED]@postgres:5432/jukwaa}
       - SUPABASE_URL=${SUPABASE_URL:-}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - MQTT_URL=mqtt://mosquitto:1883
@@ -216,7 +220,7 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3006
       - DATABASE_MODE=${DATABASE_MODE:-supabase}
-      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:[REDACTED]@postgres:5432/jukwaa}
       - SUPABASE_URL=${SUPABASE_URL:-}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - REDIS_URL=redis://redis:6379
@@ -238,7 +242,7 @@ services:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3003
       - DATABASE_MODE=${DATABASE_MODE:-supabase}
-      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:jukwaa_secret@postgres:5432/jukwaa}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://jukwaa:[REDACTED]@postgres:5432/jukwaa}
       - SUPABASE_URL=${SUPABASE_URL:-}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY:-}
       - MONGODB_URI=mongodb://mongodb:27017/jukwaa_telemetry
@@ -338,10 +342,9 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
-  redis_data:
-  mosquitto_data:
-  mosquitto_log:
-  minio_data:
-  mongodb_data:
-  citizen-vault-backups:
+  jukwa_postgres_data:
+  jukwa_redis_data:
+  jukwa_mosquitto_data:
+  jukwa_mosquitto_log:
+  jukwa_minio_data:
+  jukwa_mongodb_data:
